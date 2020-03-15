@@ -107,7 +107,7 @@ physeqB.flt = filter_taxa(physeqB.flt , function(x) sum(x > 0) > (0.04*length(x)
 physeqB.flt = subset_taxa(physeqB.flt, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
 
 #rarefaction curve
-rarecurve(t(otu_table(physeqB.flt)), step=200, sample = 7000, label = FALSE) 
+rarecurve(t(otu_table(physeqB.flt)), step=200, sample = min(colSums(otu_table(physeqB.flt))), label = FALSE) 
 
 #taxatables for reference
 taxtableB.fltr <- data.frame(phyloseq::tax_table(physeqB.flt)@.Data)
