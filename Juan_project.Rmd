@@ -1,0 +1,314 @@
+---
+title: "Juan Project"
+output: 
+  html_document:
+    toc: true
+editor_options: 
+  chunk_output_type: inline
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+  encoding=encoding,
+  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+---
+
+```{r packages, message=FALSE, warning=FALSE, echo=FALSE}
+load("workspace.RData")
+#mywd
+#knit: (function(input_file, encoding) {
+#  out_dir <- 'docs';
+#  rmarkdown::render(input_file,
+# encoding=encoding,
+# output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+#https://resources.github.com/whitepapers/github-and-rstudio/ #info on github page creation
+setwd("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration")
+#mypackages
+library(ggrepel)
+library(qiime2R)
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+theme_set(theme_bw())  
+library(vegan)
+library(ggpubr)
+library(RColorBrewer)
+library(phyloseq)
+library(psych)
+library(reshape2)
+library(ggfortify)
+library(factoextra)
+library(FactoMineR)
+library(maigesPack)
+library(knitr)
+library(microbiome)
+library(SpiecEasi)
+library(bookdown)
+library(tinytex)
+library(jakR)
+library(kableExtra)
+options(kableExtra.auto_format = FALSE)
+```
+
+
+# Metadata and phyloseq object bacteria {#metadata}
+```{r phyloseq, warning=FALSE, message=FALSE, echo=FALSE, cache = TRUE}
+#https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121?u=jbisanz
+metadata<-read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/metadata.tsv") #requires tidyverse
+metadata2 <- metadata[c(2:67),]
+#defining factors
+metadata2$Soiltypes <- factor(metadata2$Soiltypes, levels=c("Sodosol", "Vertisol","PLcomparison"))
+metadata2$Treatments <- factor(metadata2$Treatments, levels=c("Control", "NPKS", "PL/N", "PL", "Straw+NPKS", "no plant no amendment","PLharvest","PLorig"))
+metadata2$AggregateSize <- factor(metadata2$AggregateSize, levels=c(">2 mm", "0.25-2 mm", "PL"))
+
+# create phyloseq object
+SVs      <-   qiime2R::read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/feature_table.qza")
+taxonomy <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/taxonomy_silva.tsv") %>% filter(Taxon != "categorical")  %>% rename(Feature.ID = `Feature ID`)
+taxtable <- taxonomy %>% as_tibble() %>% separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species")) 
+#tree <- read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/insertion-tree.qza")
+
+physeqB <- phyloseq(
+  otu_table(SVs$data, taxa_are_rows = T), 
+  #phy_tree(tree$data), 
+  tax_table(as.data.frame(taxtable) %>% dplyr::select(-Confidence) %>% column_to_rownames("Feature.ID") %>% as.matrix()), 
+  sample_data(metadata2 %>% as.data.frame() %>% column_to_rownames("#SampleID")))
+
+#adding diversity measures (with ps object) to metadata and re-create ps object 
+#here a decision has to be made on sample size. Look at feature-table.qzv to see how many samples are lost with x sample size or how many features are lost with minimum sample size. This is used ONLY for diversity metrics (not differentially abundance anaylyis which I filter separately. So I generally use the minimum samples size if different between min/max is within 10fold. 
+print(paste("The minimum number of sequences in this data set is",min(colSums(otu_table(physeqB))),"and the maximum number of sequences in this data set is",max(colSums(otu_table(physeqB))) ))
+#Create rarefied physeq object
+rare_Bac <- rarefy_even_depth(physeqB, sample.size = min(colSums(otu_table(physeqB))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+ps.div <- estimate_richness(rare_Bac) #do diversity measurements and add to metadata
+ps.div$`#SampleID` <- sample_names(physeqB)
+
+meta.df <- data.frame(sample_data(physeqB))
+meta.df <- meta.df %>% rownames_to_column("#SampleID") %>% 
+  left_join(ps.div, by = "#SampleID") %>% column_to_rownames("#SampleID")
+meta.df$pielou_ev <- ps.div$Shannon/log(ps.div$Observed)      #Pielou eveness
+physeqB@sam_data <- sample_data(meta.df)
+
+physeqB
+#kable(head(sample_data(physeqB)))
+#head(otu_table(physeqB))
+#head(tax_table(physeqB))
+kable(meta.df[c(1:5),c(1:12)], booktabs=TRUE) %>% 
+  kable_styling(latex_options="scale_down")
+```
+
+# Data inspection and filtering {#inspec}
+```{r inspec, warning=FALSE, message=FALSE, echo=FALSE, cache = TRUE}
+# all features
+otus.table <- as.data.frame(otu_table(physeqB))
+otus.table <- otus.table %>% rownames_to_column(var = "#SampleID") %>% arrange(desc(rowSums(otus.table))) %>% column_to_rownames(var = "#SampleID")
+#filter 
+#minimum of reads per feature
+physeqB.flt = prune_taxa(taxa_sums(physeqB) >= 25, physeqB) #minimum reads per feature
+physeqB.flt = filter_taxa(physeqB.flt , function(x) sum(x > 0) > (0.04*length(x)), TRUE) #minimum presense in x% of samples
+#filter any phyla that have not been classified i.e. are "NA"
+physeqB.flt = subset_taxa(physeqB.flt, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
+
+#rarefaction curve
+rarecurve(t(otu_table(physeqB.flt)), step=200, sample = 7000, label = FALSE) 
+
+#taxatables for reference
+taxtableB.fltr <- data.frame(phyloseq::tax_table(physeqB.flt)@.Data)
+taxtableB.fltr <- taxtableB.fltr %>% rownames_to_column(var = "Id")
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeqB.flt))
+summary(sample_sum_df$sum)
+
+#histograms
+# Histogram of sample read counts
+ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "indianred") +
+  ggtitle("Distribution of sample sequencing depth") + 
+  xlab("Read counts") +
+  theme(axis.title.y = element_blank())
+
+# barplot with red line through median value
+dat2 <- t(otu_table(physeqB.flt)) %>% melt(.) %>% arrange(desc(value))
+ggbarplot(data = dat2, x = "Var2", y = "value",xlab = "Filtered", order = unique(dat2$Var2)) + geom_hline(yintercept=median(rowSums(otu_table(physeqB.flt))), color="red")
+
+summary(taxa_sums(physeqB.flt))
+print(paste("The number of reads and ASVs left after filtering is",round(sum(taxa_sums(physeqB.flt)) / sum(taxa_sums(physeqB))*100,2),"% and",round(ntaxa(physeqB.flt) / ntaxa(physeqB) *100,2),"%, a change from",round(sum(taxa_sums(physeqB))),"to",round(sum(taxa_sums(physeqB.flt))), "reads and", ntaxa(physeqB),"to",ntaxa(physeqB.flt),"ASVs. The median changed from", median(rowSums(otu_table(physeqB))),"to",median(rowSums(otu_table(physeqB.flt))),"reads per ASV."))
+
+otutable <- otu_table(physeqB.flt) %>% as.data.frame() %>% rownames_to_column("Feature.ID") %>% left_join(taxonomy) %>% dplyr::select( - Confidence, -Feature.ID) %>% dplyr::select(Taxon, everything())
+write.csv(t(otutable), "otu.table_Juan.csv", row.names = TRUE)
+```
+go [back to top](#metadata) 
+
+# Taxa barplots
+## Comparison by soil
+```{r barsoil, echo=FALSE, fig.width=10, message=FALSE, warning=FALSE, cache=TRUE}
+#create plotting tables
+#use relative abundances and glomerate to x level
+physeqB.flt.rel.glom <- tax_glom(physeqB.flt, "Phylum")
+physeqB.flt.rel.glom <-  merge_samples(physeqB.flt.rel.glom, "Soiltypes")
+physeqB.flt.rel.glom <- phyloseq::transform_sample_counts(physeqB.flt.rel.glom, function(x) x / sum(x) )
+#plus relative abundances of filtered data
+#use this for plots
+barplot.rel <- psmelt(physeqB.flt.rel.glom) %>%  arrange(desc(Phylum))
+#barplot
+barplot.rel %>% ggbarplot(x = "Sample", y = "Abundance", fill = "Phylum", width = 0.2, title = "Relative Abundances of filtered OTUs", legend = "right") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+go [back to top](#metadata) 
+
+## Comparison by Soil, treatment and aggregate size
+```{r soiltreament, echo=FALSE, fig.width=10, message=FALSE, warning=FALSE, cache=TRUE}
+#Phylum level
+#use relative abundances and glomerate to x level
+physeqB.flt.rel.glom <- tax_glom(physeqB.flt, "Phylum")
+physeqB.flt.rel.glom <- phyloseq::transform_sample_counts(physeqB.flt.rel.glom, function(x) x / sum(x) )
+
+#barplots
+barplot.rel <- psmelt(physeqB.flt.rel.glom) %>%  arrange(desc(Phylum))
+barplot.relsoil1 <- barplot.rel %>% filter(Soiltypes != "PLcomparison") %>%  ggbarplot(x = "AggregateSize", y = "Abundance", fill = "Phylum", width = 0.2, title = "Relative Abundances of filtered ASVs", legend = "right", facet.by = c("Soiltypes","Treatments")) +  theme(plot.title = element_text(size = 10)) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+barplot.relsoil1
+```
+
+```{r soiltreamentPL, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
+# Poultry litter comparison
+barplot.rel <- psmelt(physeqB.flt.rel.glom) %>%  arrange(desc(Phylum))
+barplot.relsoil1 <- barplot.rel %>% filter(Soiltypes == "PLcomparison") %>%  ggbarplot(x = "Treatments", y = "Abundance", fill = "Phylum", width = 0.2, title = "Relative Abundances of filtered ASVs", legend = "right", facet.by = c("Soiltypes","AggregateSize")) +  theme(plot.title = element_text(size = 10)) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+barplot.relsoil1
+```
+
+
+## Sodosol - Sign. diff. on genus level (Wilcoxon test *p* < 0.001 holm corrected)
+```{r sodtsigdiff, include = TRUE, echo=FALSE, message=FALSE, warning=FALSE,fig.asp=1, fig.height=15, cache=TRUE}
+#Soil1 data
+physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltypes == "Sodosol", physeqB.flt)
+
+#Soil1
+#wilcoxon test
+barplot.rel <- microbiome::transform(physeqBSoil1, "clr")
+barplot.rel.melt <- psmelt(barplot.rel) %>%  dplyr::arrange(desc(Phylum))
+wilcoxotest <-  barplot.rel.melt %>% ggpubr::compare_means(Abundance ~ Treatments, data = ., group.by = "Genus", method = "wilcox.test", paired = FALSE, ref.group = "Control", symnum.args = list(), p.adjust.method = "holm") %>% as.data.frame() %>% dplyr::filter(p.adj <= 0.001)
+figvec <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/filtervecforgraph.csv", header = TRUE)
+
+wilcoxotest <- wilcoxotest %>% dplyr::filter(Genus != "") %>% dplyr::filter(Genus %in% figvec$x)
+kable(wilcoxotest,booktabs=TRUE) %>% 
+  kable_styling(latex_options="scale_down")
+```
+
+```{r sodtsigdiffbarplot, echo=FALSE, message=FALSE, fig.width=15,  fig.asp=1, warning=FALSE, cache=TRUE}
+#barplot
+
+figvec <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/filtervecforgraph.csv", header = TRUE)
+figvec <- as.vector(figvec$x)
+barplot.rel <- phyloseq::transform_sample_counts(physeqBSoil1, function(x) x / sum(x) )
+
+subs <- psmelt(barplot.rel) %>% dplyr::filter(Genus %in% figvec)
+barplot.relsoil1 <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.title.x=element_blank(),             axis.text.x=element_blank(), axis.ticks.x=element_blank()) # theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+barplot.relsoil1 
+```
+
+go [back to top](#metadata)  
+ 
+
+## Vertisol - Sign. diff. on genus level (Wilcoxon test *p* < 0.001 holm corrected)
+```{r vertsigdiff, echo=FALSE, fig.width=15,  fig.asp=0.6, message=FALSE, warning=FALSE, cache=TRUE}
+#Soil2 data
+physeqBSoil2 <-  prune_samples(sample_data(physeqB.flt)$Soiltypes == "Vertisol", physeqB.flt)
+
+#Soil1
+#wilcoxon test
+barplot.rel <- microbiome::transform(physeqBSoil2, "clr")
+barplot.rel.melt <- psmelt(barplot.rel) %>%  arrange(desc(Phylum))
+wilcoxotest <-  barplot.rel.melt %>% compare_means(Abundance ~ Treatments, data = ., group.by = "Genus", method = "wilcox.test", paired = FALSE, ref.group = "Control", symnum.args = list(), p.adjust.method = "holm") %>% as.data.frame() %>% filter(p.adj <= 0.001)
+kable(wilcoxotest %>% filter(Genus != ""),booktabs=TRUE) %>% 
+  kable_styling(latex_options="scale_down")
+
+
+#barplot
+vec <- unique(wilcoxotest %>% filter(Genus != "") %>% dplyr::select(Genus))  
+barplot.rel <- phyloseq::transform_sample_counts(physeqBSoil2, function(x) x / sum(x) )
+subs <- psmelt(barplot.rel) %>% dplyr::filter(Genus %in% vec$Genus)
+barplot.relsoil2 <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free") # theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+barplot.relsoil2 
+```
+
+go [back to top](#metadata)  
+
+
+
+# Alpha diversity {#alphadiversity}
+## by soil
+```{r alphasoil, echo=FALSE, fig.width=6, message=FALSE, warning=FALSE, cache=TRUE}
+as.data.frame(sample_data(physeqB.flt)) %>% melt(., measure.var = c("Observed", "InvSimpson", "Shannon", "pielou_ev"))  %>%
+ggboxplot(., x = "Soiltypes", y = "value", add = "jitter", facet.by = "variable", scales = "free", ylab = "alpha diversity") +
+  stat_compare_means( method = "kruskal") 
+```
+  
+go [back to top](#metadata) 
+
+
+## Comparison by treatments
+```{r alphaCO2, echo=FALSE, fig.asp=1, fig.height=15, message=FALSE, warning=FALSE, cache=TRUE}
+p1 <- as.data.frame(sample_data(physeqB.flt)) %>% melt(., measure.var = c("Observed"))  %>% ggboxplot(., x = "Treatments", y = "value", add = "jitter", facet.by = c("Soiltypes","variable"), scales = "free", ylab = "alpha diversity") + stat_compare_means( method = "wilcox", ref.group = "Control", label = "p.signif") + theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+p2 <- as.data.frame(sample_data(physeqB.flt)) %>% melt(., measure.var = c("InvSimpson")) %>% ggboxplot(., x = "Treatments", y = "value", add = "jitter", facet.by = c("Soiltypes","variable"), scales = "free", ylab = "alpha diversity") + stat_compare_means( method = "wilcox", ref.group = "Control", label = "p.signif") + theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+p3 <- as.data.frame(sample_data(physeqB.flt)) %>% melt(., measure.var = c("Shannon"))  %>% ggboxplot(., x = "Treatments", y = "value", add = "jitter", facet.by = c("Soiltypes","variable"), scales = "free", ylab = "alpha diversity") + stat_compare_means( method = "wilcox", ref.group = "Control", label = "p.signif") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p4 <- as.data.frame(sample_data(physeqB.flt)) %>% melt(., measure.var = c("pielou_ev"))  %>% ggboxplot(., x = "Treatments", y = "value", add = "jitter", facet.by = c("Soiltypes","variable"), scales = "free", ylab = "alpha diversity") + stat_compare_means( method = "wilcox", ref.group = "Control", label = "p.signif") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pdf(NULL)
+gg1 <- ggarrange(p1,p2,p3,p4, nrow = 2, ncol = 2, heights  = c(0.6,1))
+x = dev.off()
+gg1
+
+```
+  
+go [back to top](#metadata) 
+
+
+
+# Beta diversity 
+
+## NMDS Bray
+### Sodosol
+```{r nmdsSod, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = TRUE}
+
+#Soil1 data
+physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Sodosol", physeqB.flt)
+
+ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments") + geom_point(aes(size = InvSimpson)) + ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+nmds1  <- nmds1  +  geom_text_repel(label = nmds1$data$ColumnNo)
+#nmds1 <- nmds1 + stat_ellipse(aes(group = days), type = "t", linetype = 2)
+#nmds1 <- nmds1 + geom_polygon(aes(alpha = 0.6, fill = Rhizosphere,group = TreatmentID), stat = "identity") + guides(alpha = F)
+nmds1 
+
+```
+  
+go [back to top](#metadata) 
+
+### Vertisol
+```{r nmdsVert, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = TRUE}
+
+#Soil1 data
+physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Vertisol", physeqB.flt)
+
+ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments") + geom_point(aes(size = InvSimpson)) + ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+nmds1  <- nmds1  +  geom_text_repel(label = nmds1$data$ColumnNo)
+#nmds1 <- nmds1 + stat_ellipse(aes(group = days), type = "t", linetype = 2)
+#nmds1 <- nmds1 + geom_polygon(aes(alpha = 0.6, fill = Rhizosphere,group = TreatmentID), stat = "identity") + guides(alpha = F)
+nmds1 
+
+save.image("workspace.RData")
+```
+  
+go [back to top](#metadata) 
+

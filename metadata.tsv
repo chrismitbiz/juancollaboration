@@ -1,0 +1,68 @@
+#SampleID	ColumnNo	Soiltypes	Treatments	Reps	AggregateSize
+#q2:types	categorical	categorical	categorical	categorical	categorical
+Juan01	1	Sodosol	 Control	1	>2 mm 
+Juan02	2	Sodosol	 Control	2	>2 mm 
+Juan03	3	Sodosol	 Control	3	>2 mm 
+Juan04	4	Sodosol	NPKS	1	>2 mm 
+Juan05	5	Sodosol	NPKS	2	>2 mm 
+Juan06	6	Sodosol	NPKS	3	>2 mm 
+Juan07	7	Sodosol	PL/N	1	>2 mm 
+Juan08	8	Sodosol	PL/N	2	>2 mm 
+Juan09	9	Sodosol	PL/N	3	>2 mm 
+Juan10	10	Sodosol	PL	1	>2 mm 
+Juan11	11	Sodosol	PL	2	>2 mm 
+Juan12	12	Sodosol	PL	3	>2 mm 
+Juan13	16	Sodosol	Straw+NPKS	1	>2 mm 
+Juan14	17	Sodosol	Straw+NPKS	2	>2 mm 
+Juan15	18	Sodosol	Straw+NPKS	3	>2 mm 
+Juan16	0	Sodosol	no plant no amendment	1	>2 mm 
+Juan17	0	Sodosol	no plant no amendment	2	>2 mm 
+Juan18	0	Sodosol	no plant no amendment	3	>2 mm 
+Juan19	19	Vertisol	Control	1	>2 mm 
+Juan20	20	Vertisol	Control	2	>2 mm 
+Juan21	21	Vertisol	Control	3	>2 mm 
+Juan22	22	Vertisol	NPKS	1	>2 mm 
+Juan23	23	Vertisol	NPKS	2	>2 mm 
+Juan24	24	Vertisol	NPKS	3	>2 mm 
+Juan25	25	Vertisol	PL/N	1	>2 mm 
+Juan26	26	Vertisol	PL/N	2	>2 mm 
+Juan27	27	Vertisol	PL/N	3	>2 mm 
+Juan28	0	Vertisol	no plant no amendment	1	>2 mm 
+Juan29	0	Vertisol	no plant no amendment	2	>2 mm 
+Juan30	0	Vertisol	no plant no amendment	3	>2 mm 
+Juan31	1	Sodosol	 Control	1	0.25-2 mm 
+Juan32	2	Sodosol	 Control	2	0.25-2 mm 
+Juan33	3	Sodosol	 Control	3	0.25-2 mm 
+Juan34	4	Sodosol	NPKS	1	0.25-2 mm 
+Juan35	5	Sodosol	NPKS	2	0.25-2 mm 
+Juan36	6	Sodosol	NPKS	3	0.25-2 mm 
+Juan37	7	Sodosol	PL/N	1	0.25-2 mm 
+Juan38	8	Sodosol	PL/N	2	0.25-2 mm 
+Juan39	9	Sodosol	PL/N	3	0.25-2 mm 
+Juan40	10	Sodosol	PL	1	0.25-2 mm 
+Juan41	11	Sodosol	PL	2	0.25-2 mm 
+Juan42	12	Sodosol	PL	3	0.25-2 mm 
+Juan43	16	Sodosol	Straw+NPKS	1	0.25-2 mm 
+Juan44	17	Sodosol	Straw+NPKS	2	0.25-2 mm 
+Juan45	18	Sodosol	Straw+NPKS	3	0.25-2 mm 
+Juan46	0	Sodosol	no plant no amendment	1	0.25-2 mm 
+Juan47	0	Sodosol	no plant no amendment	2	0.25-2 mm 
+Juan48	0	Sodosol	no plant no amendment	3	0.25-2 mm 
+Juan49	19	Vertisol	Control	1	0.25-2 mm 
+Juan50	20	Vertisol	Control	2	0.25-2 mm 
+Juan51	21	Vertisol	Control	3	0.25-2 mm 
+Juan52	22	Vertisol	NPKS	1	0.25-2 mm 
+Juan53	23	Vertisol	NPKS	2	0.25-2 mm 
+Juan54	24	Vertisol	NPKS	3	0.25-2 mm 
+Juan55	25	Vertisol	PL/N	1	0.25-2 mm 
+Juan56	26	Vertisol	PL/N	2	0.25-2 mm 
+Juan57	27	Vertisol	PL/N	3	0.25-2 mm 
+Juan58	0	Vertisol	no plant no amendment	1	0.25-2 mm 
+Juan59	0	Vertisol	no plant no amendment	2	0.25-2 mm 
+Juan60	0	Vertisol	no plant no amendment	3	0.25-2 mm 
+Juan61	PLcomparison	PLcomparison	PLharvest	1	PL
+Juan62	PLcomparison	PLcomparison	PLharvest	2	PL
+Juan63	PLcomparison	PLcomparison	PLharvest	3	PL
+Juan64	PLcomparison	PLcomparison	PLorig	1	PL
+Juan65	PLcomparison	PLcomparison	PLorig	2	PL
+Juan66	PLcomparison	PLcomparison	PLorig	3	PL

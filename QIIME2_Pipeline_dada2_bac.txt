@@ -1,0 +1,126 @@
+#!/bin/bash
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=6000
+#SBATCH --time=96:00:00
+#SBATCH --partition=compute
+#SBATCH --job-name=JuanP
+
+
+echo "Starting at: $(date)"
+
+
+#12 March imported FastQ files and created manifest 
+# FastQ files and manifest location: /Volumes/Backup\ Plus/ManualFileBackup/Basepace/ChrisJinJuan_Bac_March2020/Files_Juan
+#Qiime2_outut: ~/Documents/Study/LaTrobe/Research/phD/Juan_project/qiime2_data
+
+## Pipeline can be run through from demultiplexed file until pre-filtered feature table and taxonomy with both greengenes and silva 
+
+#module load qiime2/2019.01
+
+module load miniconda3
+source activate qiime2-2020.2
+
+
+###------------------------------- PAIRED END MANIFEST IMPORT (Step 1) 
+
+#qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path manifest.tsv --output-path demux-paired-end.qza --input-format PairedEndFastqManifestPhred33V2
+
+#qiime demux summarize --i-data demux-paired-end.qza --o-visualization ~/Documents/Study/LaTrobe/Research/phD/Juan_project/qiime2_data/demux-paired-end.qzv
+
+
+#12March2020: 5,744,201 total demultiplexed reads, min 33,575 max 201,270
+
+
+
+### ------------------------------------  CUTADAPT (step 2) ----------------------------- 
+##bacteria
+#qiime cutadapt trim-paired --i-demultiplexed-sequences demux-paired-end.qza --p-front-f GTGCCAGCMGCCGCGGTAA --p-front-r GGACTACNVGGGTWTCTAAT --o-trimmed-sequences demux-trimmed.qza
+
+#qiime demux summarize --i-data demux-trimmed.qza --o-visualization demux-trimmed.qzv
+
+
+
+
+###------------------------------------DENOISE PAIRED END SEQS (step 3) --------------------------------------
+
+##pmax ee default = 2
+#qiime dada2 denoise-paired --i-demultiplexed-seqs demux-trimmed.qza --o-table feature_table.qza --o-representative-sequences rep_sequences.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 273 --p-trunc-len-r 192 --output-dir dada2 --verbose
+#qiime feature-table summarize --i-table feature_table.qza --o-visualization feature_table.qzv --m-sample-metadata-file metadata.tsv
+
+#13March20: 36,750 features from 1,786,048 filtered reads (31% of demultiplexed reads) 
+
+
+
+###----------------------------------TAXONOMIC ANALYSIS  (step 4) ----------------------------
+
+### Silva
+#qiime feature-classifier classify-sklearn --i-classifier silva-132-99-515-806-nb-classifier.qza --p-reads-per-batch 10000 --i-reads rep_sequences.qza --o-classification taxonomy_silva.qza --quiet
+
+#qiime feature-classifier classify-sklearn --i-classifier silva-132-99-515-806-nb-classifier_2019.1.qza --i-reads rep_sequences.qza --o-classification taxonomy_silva.qza --quiet
+
+#qiime metadata tabulate --m-input-file taxonomy_silva.qza --o-visualization taxonomy_silva.qzv
+  
+#qiime taxa barplot --i-table feature_table.qza --i-taxonomy taxonomy_silva.qza --m-metadata-file metadata.tsv --o-visualization barplots_silva.qzv
+
+
+
+#### greengene
+#qiime feature-classifier classify-sklearn --i-classifier gg-13-8-99-515-806-nb-classifier.qza --i-reads rep_sequences.qza --o-classification taxonomy_gg_M4.qza
+
+#qiime metadata tabulate --m-input-file taxonomy_gg.qza --o-visualization taxonomy_gg.qzv
+
+#qiime taxa barplot --i-table feature_table.qza --i-taxonomy taxonomy_gg.qza --m-metadata-file metadata.tsv --o-visualization barplots_gg.qzv
+
+
+
+
+
+###-----------------------------------BUILD PHYLOGENETIC TREE (FRAGMENT INSERTION)-------------------------------------
+
+#qiime fragment-insertion sepp --i-representative-sequences rep_sequences.qza --i-reference-database ~/M2_Qiime_output_Bacteria2020run/sepp-refs-silva-128.qza --o-tree insertion-tree.qza --o-placements insertion-placements.qza
+
+qiime fragment-insertion filter-features --i-table feature_table.qza --i-tree insertion-tree.qza --o-filtered-table feature_table_insertiontreefiltered.qza --o-removed-table removed_features.qza
+
+
+
+
+###------------------------------------  FILTERING LOW ABUNDANT FEATURES FOR DIVERSITY ANALYSIS --------------------------------------
+##contamination
+#qiime taxa filter-table --i-table feature_table.qza --i-taxonomy taxonomy_silva_M4.qza --p-exclude mitochondria,chloroplast --o-filtered-table feature_table_no-mitoch_chloropl.qza
+
+
+#qiime feature-table summarize --i-table feature_table_no-mitoch_chloropl.qza --o-visualization feature_table_no-mitoch_chloropl.qzv --m-sample-metadata-file metadata.tsv
+
+
+### STOP at this step to get average frequency and then decide min to filter
+
+
+## 
+#qiime feature-table filter-features --i-table feature_table_no-mitoch_chloropl.qza --p-min-frequency 23 --o-filtered-table feature_table_no-mitoch_chloropl_fltredreads.qza
+
+
+#STOP and summarise table for visualisation, decide on sampling depth for diversity analysis
+#qiime feature-table summarize --i-table feature_table_no-mitoch_chloropl_fltredreads.qza --o-visualization feature_table_no-mitoch_chloropl_fltredreads.qzv --m-sample-metadata-file metadata.tsv
+
+
+
+
+conda deactivate
+source deactivate
+
+
+
+
+echo "Finished at: $(date)"
+
+
+
+
+
+
+
+
+
+
+
+
