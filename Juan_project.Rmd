@@ -10,6 +10,7 @@ knit: (function(input_file, encoding) {
   rmarkdown::render(input_file,
   encoding=encoding,
   output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+
 ---
 
 ```{r packages, message=FALSE, warning=FALSE, echo=FALSE}
@@ -61,8 +62,8 @@ metadata2$Treatments <- factor(metadata2$Treatments, levels=c("Control", "NPKS",
 metadata2$AggregateSize <- factor(metadata2$AggregateSize, levels=c(">2 mm", "0.25-2 mm", "PL"))
 
 # create phyloseq object
-SVs      <-   qiime2R::read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/feature_table.qza")
-taxonomy <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/taxonomy_silva.tsv") %>% filter(Taxon != "categorical")  %>% rename(Feature.ID = `Feature ID`)
+SVs      <-   qiime2R::read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data_200317/feature_table.qza")
+taxonomy <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data_200317/taxonomy_silva.tsv") %>% filter(Taxon != "categorical")  %>% rename(Feature.ID = `Feature ID`)
 taxtable <- taxonomy %>% as_tibble() %>% separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species")) 
 #tree <- read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/insertion-tree.qza")
 
@@ -101,8 +102,8 @@ otus.table <- as.data.frame(otu_table(physeqB))
 otus.table <- otus.table %>% rownames_to_column(var = "#SampleID") %>% arrange(desc(rowSums(otus.table))) %>% column_to_rownames(var = "#SampleID")
 #filter 
 #minimum of reads per feature
-physeqB.flt = prune_taxa(taxa_sums(physeqB) >= 25, physeqB) #minimum reads per feature
-physeqB.flt = filter_taxa(physeqB.flt , function(x) sum(x > 0) > (0.04*length(x)), TRUE) #minimum presense in x% of samples
+physeqB.flt = prune_taxa(taxa_sums(physeqB) >= 10, physeqB) #minimum reads per feature
+physeqB.flt = filter_taxa(physeqB.flt , function(x) sum(x > 0) > (0.03*length(x)), TRUE) #minimum presense in x% of samples
 #filter any phyla that have not been classified i.e. are "NA"
 physeqB.flt = subset_taxa(physeqB.flt, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
 
@@ -174,7 +175,7 @@ barplot.relsoil1
 
 
 ## Sodosol - Sign. diff. on genus level (Wilcoxon test *p* < 0.001 holm corrected)
-```{r sodtsigdiff, include = TRUE, echo=FALSE, message=FALSE, warning=FALSE,fig.asp=1, fig.height=15, cache=TRUE}
+```{r sodtsigdiff, include = TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.asp=0.8, fig.width= 15, cache=TRUE}
 #Soil1 data
 physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltypes == "Sodosol", physeqB.flt)
 
@@ -183,14 +184,26 @@ physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltypes == "Sodosol", 
 barplot.rel <- microbiome::transform(physeqBSoil1, "clr")
 barplot.rel.melt <- psmelt(barplot.rel) %>%  dplyr::arrange(desc(Phylum))
 wilcoxotest <-  barplot.rel.melt %>% ggpubr::compare_means(Abundance ~ Treatments, data = ., group.by = "Genus", method = "wilcox.test", paired = FALSE, ref.group = "Control", symnum.args = list(), p.adjust.method = "holm") %>% as.data.frame() %>% dplyr::filter(p.adj <= 0.001)
-figvec <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/filtervecforgraph.csv", header = TRUE)
+#figvec <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/filtervecforgraph.csv", header = TRUE)
 
-wilcoxotest <- wilcoxotest %>% dplyr::filter(Genus != "") %>% dplyr::filter(Genus %in% figvec$x)
+vecS <- c("D_5__Acidibacter", "D_5__Actinoallomurus","D_5__Actinoplanes", "D_5__Anaeromyxobacter", "D_5__Aquisphaera", "D_5__Bacillus", "D_5__Bdellovibrio","D_5__Bryobacter", "D_5__Candidatus Koribacter", "D_5__Candidatus Solibacter", "D_5__Cellvibrio", "D_5__Chthoniobacter", "D_5__Devosia", "D_5__Ellin6067","D_5__Flavisolibacter", "D_5__Flavobacterium", "D_5__Gemmatimonas", "D_5__Gemmatirosa","D_5__Haliangium","D_5__Isosphaera", "D_5__LD29", "D_5__Ktedonobacter", "D_5__Luteolibacter", "D_5__Microbacterium","D_5__Micromonospora", "D_5__Nakamurella", "D_5__Nannocystis", "D_5__Niastella", "D_5__Nitrolancea", "D_5__Nocardioides", "D_5__Novibacillus", "D_5__Oceanobacillus", "D_5__Ohtaekwangia", "D_5__Oligoflexus", "D_5__Opitutus", "D_5__Paenibacillus", "D_5__Pajaroellobacter", "D_5__Pedobacter", "D_5__Peredibacter","D_5__Pirellula", "D_5__Reyranella", "D_5__Rhodanobacter", "D_5__Rhodopirellula", "D_5__Rubrobacter", "D_5__Segetibacter", "D_5__Singulisphaera", "D_5__Sphingobacterium", "D_5__Sphingomonas", "D_5__Streptomyces", "D_5__Truepera", "D_5__Virgibacillus", "D_5__Vulgatibacter")
+
+wilcoxotest <- wilcoxotest %>% dplyr::filter(Genus %in% vecS) 
 kable(wilcoxotest,booktabs=TRUE) %>% 
   kable_styling(latex_options="scale_down")
+
+#barplot
+barplot.rel <- phyloseq::transform_sample_counts(physeqBSoil1, function(x) x / sum(x) )
+subs <- psmelt(barplot.rel) %>% dplyr::filter(Genus %in% vecS) 
+barplot.relsoil1 <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.title.x=element_blank(),             axis.text.x=element_blank(), axis.ticks.x=element_blank()) # theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+barplot.relsoil1 +  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+
 ```
 
-```{r sodtsigdiffbarplot, echo=FALSE, message=FALSE, fig.width=15,  fig.asp=1, warning=FALSE, cache=TRUE}
+```{r sodtsigdiffbarplot, echo=FALSE, message=FALSE, fig.width=15,  fig.asp=1, warning=FALSE, include = FALSE, eval=FALSE, cache=TRUE}
 #barplot
 
 figvec <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/filtervecforgraph.csv", header = TRUE)
@@ -220,12 +233,15 @@ kable(wilcoxotest %>% filter(Genus != ""),booktabs=TRUE) %>%
 
 
 #barplot
-vec <- unique(wilcoxotest %>% filter(Genus != "") %>% dplyr::select(Genus))  
+#vec <- unique(wilcoxotest %>% filter(Genus != "") %>% dplyr::select(Genus))  
+vec <- c("D_5__Bdellovibrio", "D_5__Candidatus Solibacter","D_5__Candidatus Udaeobacter","D_5__Conexibacter", "D_5__Devosia" , "D_5__Flavisolibacter","D_5__Flavobacterium","D_5__Gemmatimonas", "D_5__Nitrolancea","D_5__Mucilaginibacter", "D_5__Ohtaekwangia", "D_5__Peredibacter", "D_5__Pirellula", "D_5__Pseudomonas" , "D_5__Pseudogracilibacillus")
 barplot.rel <- phyloseq::transform_sample_counts(physeqBSoil2, function(x) x / sum(x) )
-subs <- psmelt(barplot.rel) %>% dplyr::filter(Genus %in% vec$Genus)
+subs <- psmelt(barplot.rel) %>% dplyr::filter(Genus %in% vec)
+
 barplot.relsoil2 <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free") # theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 barplot.relsoil2 
+
 ```
 
 go [back to top](#metadata)  

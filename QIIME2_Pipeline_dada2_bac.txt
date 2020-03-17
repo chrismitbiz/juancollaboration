@@ -48,8 +48,8 @@ source activate qiime2-2020.2
 
 #qiime feature-table summarize --i-table feature_table.qza --o-visualization feature_table.qzv --m-sample-metadata-file metadata.tsv
 
-# 12March: 28,181 number of features, 894,307 filtered reads (30% from original 3,009,658 demultiplexed reads) 
-
+# 12March: 28,181 number of features, 894,307 filtered reads (30%) from original 3,009,658 demultiplexed reads) 
+#17March: 21,407 features, 4,254,078 filtered reads (74%) from original 3,009,658 demultiplexed reads)
 
 
 ###----------------------------------TAXONOMIC ANALYSIS  (step 3) ----------------------------
