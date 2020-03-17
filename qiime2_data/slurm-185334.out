@@ -1,0 +1,5 @@
+Starting at: Sat Mar 14 07:59:19 AEDT 2020
+Saved FeatureTable[Frequency] to: feature_table_insertiontreefiltered.qza
+Saved FeatureTable[Frequency] to: removed_features.qza
+DeprecationWarning: 'source deactivate' is deprecated. Use 'conda deactivate'.
+Finished at: Sat Mar 14 08:00:36 AEDT 2020

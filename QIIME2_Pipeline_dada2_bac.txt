@@ -44,19 +44,18 @@ source activate qiime2-2020.2
 ###------------------------------------DENOISE PAIRED END SEQS (step 3) --------------------------------------
 
 ##pmax ee default = 2
-#qiime dada2 denoise-paired --i-demultiplexed-seqs demux-trimmed.qza --o-table feature_table.qza --o-representative-sequences rep_sequences.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 273 --p-trunc-len-r 192 --output-dir dada2 --verbose
+#qiime dada2 denoise-paired --i-demultiplexed-seqs demux-trimmed.qza --o-table feature_table.qza --o-representative-sequences rep_sequences.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 231 --p-trunc-len-r 125 --output-dir dada2 --verbose
+
 #qiime feature-table summarize --i-table feature_table.qza --o-visualization feature_table.qzv --m-sample-metadata-file metadata.tsv
 
-#13March20: 36,750 features from 1,786,048 filtered reads (31% of demultiplexed reads) 
+# 12March: 28,181 number of features, 894,307 filtered reads (30% from original 3,009,658 demultiplexed reads) 
 
 
 
-###----------------------------------TAXONOMIC ANALYSIS  (step 4) ----------------------------
+###----------------------------------TAXONOMIC ANALYSIS  (step 3) ----------------------------
 
 ### Silva
 #qiime feature-classifier classify-sklearn --i-classifier silva-132-99-515-806-nb-classifier.qza --p-reads-per-batch 10000 --i-reads rep_sequences.qza --o-classification taxonomy_silva.qza --quiet
-
-#qiime feature-classifier classify-sklearn --i-classifier silva-132-99-515-806-nb-classifier_2019.1.qza --i-reads rep_sequences.qza --o-classification taxonomy_silva.qza --quiet
 
 #qiime metadata tabulate --m-input-file taxonomy_silva.qza --o-visualization taxonomy_silva.qzv
   
@@ -65,7 +64,7 @@ source activate qiime2-2020.2
 
 
 #### greengene
-#qiime feature-classifier classify-sklearn --i-classifier gg-13-8-99-515-806-nb-classifier.qza --i-reads rep_sequences.qza --o-classification taxonomy_gg_M4.qza
+#qiime feature-classifier classify-sklearn --i-classifier gg-13-8-99-515-806-nb-classifier.qza --i-reads rep_sequences.qza --o-classification taxonomy_gg.qza
 
 #qiime metadata tabulate --m-input-file taxonomy_gg.qza --o-visualization taxonomy_gg.qzv
 
@@ -75,11 +74,16 @@ source activate qiime2-2020.2
 
 
 
+
 ###-----------------------------------BUILD PHYLOGENETIC TREE (FRAGMENT INSERTION)-------------------------------------
 
-#qiime fragment-insertion sepp --i-representative-sequences rep_sequences.qza --i-reference-database ~/M2_Qiime_output_Bacteria2020run/sepp-refs-silva-128.qza --o-tree insertion-tree.qza --o-placements insertion-placements.qza
+qiime fragment-insertion sepp --i-representative-sequences rep_sequences.qza --i-reference-database sepp-refs-silva-128.qza --o-tree insertion-tree.qza --o-placements insertion-placements.qza
 
 qiime fragment-insertion filter-features --i-table feature_table.qza --i-tree insertion-tree.qza --o-filtered-table feature_table_insertiontreefiltered.qza --o-removed-table removed_features.qza
+
+qiime fragment-insertion sepp --i-representative-sequences rep_sequences.qza --i-reference-database sepp-refs-gg-13-8.qza --o-tree insertion-tree_gg.qza --o-placements insertion-placements_gg.qza
+
+qiime fragment-insertion filter-features --i-table feature_table.qza --i-tree insertion-tree.qza --o-filtered-table feature_table_insertiontreefiltered_gg.qza --o-removed-table removed_features_gg.qza
 
 
 
