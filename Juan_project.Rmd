@@ -479,7 +479,7 @@ physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "compositional")
 physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
 
 subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% as.vector(aldex_significant_features$Genus) )
-subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + ggtitle("Aldex (p corrected < 0.02")
+subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + ggtitle("Aldex (p corrected < 0.02)")
 ```
 
 ```{r aldex2, eval=TRUE, echo=FALSE, fig.width=9, fig.asp = 0.8, message=FALSE, warning=FALSE, cache=TRUE}
@@ -498,8 +498,8 @@ subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", fac
 ancom <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/ancom_NPKvsPL/ancom.tsv")
 ancom_significant <- ancom %>% rename(Id = X1) %>%  inner_join(taxtable.flt2) %>% dplyr::select(Id, Phylum, Genus, W, `Reject null hypothesis`) %>% filter(W >= 150)
 
-subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% as.vector(aldex_significant_features$Genus) )
-subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + ggtitle("Ancom")
+subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% as.vector(ancom_significant$Genus) )
+subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + ggtitle("Ancom (top listed)")
 ```
 
 
