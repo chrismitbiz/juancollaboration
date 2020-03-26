@@ -328,7 +328,7 @@ go [back to top](#metadata)
 
 # Bacillus sp. plot
 ## Both soils together
-```{r bacillusblot, echo=FALSE, fig.width=8, fig.asp = 0.3, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusblot, echo=FALSE, fig.width=8, fig.asp = 0.4, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes != "PLcomparison", physeqB.flt2)
@@ -365,7 +365,7 @@ ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE,
 ```
 
 ## Sodosol only
-```{r bacillusblot2, echo=FALSE, fig.width=8, fig.asp = 0.30, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusblot2, echo=FALSE, fig.width=8, fig.asp = 0.4, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
@@ -404,7 +404,7 @@ ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE,
 ```
 
 ## Vertisol only
-```{r bacillusblot3, echo=FALSE, fig.width=8, fig.asp = 0.30, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusblot3, echo=FALSE, fig.width=8, fig.asp = 0.4, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
