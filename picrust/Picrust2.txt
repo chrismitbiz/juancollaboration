@@ -1,0 +1,114 @@
+#!/bin/bash
+#SBATCH --cpus-per-task=6
+#SBATCH --mem-per-cpu=4000
+#SBATCH --time=24:00:00
+#SBATCH --partition=compute
+
+echo "Starting at: $(date)"
+
+#module load qiime2/2019.01
+
+
+#source activate qiime2_2020.2
+
+
+
+######## Qiime2 Picrust2 ------------------
+
+#qiime picrust2 full-pipeline --i-table feature-frequency-filtered-table_51.qza --i-seq single_rep_seqs_mee2_filtered_51.qza --output-dir q2-picrust2_output --p-threads 1 --p-hsp-method mp --p-max-nsti 2 --verbose
+
+#"1888 of 1888 sequence ids overlap between input table and FASTA.
+#Placing sequences onto reference tree
+#place_seqs.py --study_fasta /tmp/tmplp6m0vvx/seqs.fna --ref_dir /data/group/tanglab/home/17996021/miniconda3/envs/qiime2-2019.7/lib/python3.6/site-packages/picrust2/default_files/prokaryotic/pro_ref --out_tree /tmp/tmplp6m0vvx/picrust2_out/out.tre --processes 1 --intermediate /tmp/tmplp6m0vvx/picrust2_out/intermediate/place_seqs --chunk_size 5000 --print_cmds...."
+
+
+#qiime feature-table summarize --i-table q2-picrust2_output/pathway_abundance.qza --o-visualization q2-picrust2_output/pathway_abundance.qzv
+
+
+#qiime diversity core-metrics --i-table q2-picrust2_output/pathway_abundance.qza --p-sampling-depth 1666940 --m-metadata-file metadata.tsv --output-dir pathabun_core_metrics_out --p-n-jobs 1
+
+
+#qiime tools export --input-path q2-picrust2_output/pathway_abundance.qza --output-path pathabun_exported
+#biom convert -i pathabun_exported/feature-table.biom -o pathabun_exported/feature-table.biom.tsv --to-tsv
+
+#qiime tools export --input-path q2-picrust2_output/ko_metagenome.qza --output-path pathabun_exported
+#biom convert -i pathabun_exported/feature-table.biom -o pathabun_exported/feature-table.biom.tsv --to-tsv
+
+
+#qiime tools export --input-path q2-picrust2_output/ec_metagenome.qza --output-path pathabun_exported
+#biom convert -i pathabun_exported/feature-table.biom -o pathabun_exported/feature-table.biom.tsv --to-tsv
+
+
+
+##add pw descriptions
+#add_descriptions.py -i pathabun_exported/feature-table.biom.tsv -m EC -o pathabun_exported/feature-table_desc.biom.tsv
+
+
+#conda create -n picrust2 -c bioconda -c conda-forge picrust2=2.2.0_b
+#conda activate picrust2
+
+#add_descriptions.py -i pathabun_exported/feature-table.biom.tsv -m METACYC -o pathabun_exported/feature-table_desc.biom.tsv
+
+
+
+
+
+
+######## Picrust2 pipeline (not QIIME2) ------------------
+#help https://github.com/picrust/picrust2/wiki/PICRUSt2-Tutorial-(v2.1.4-beta)
+#https://github.com/picrust/picrust2/blob/master/INSTALL.md
+#https://github.com/picrust/picrust2/wiki/Frequently-Asked-Questions#how-can-i-determine-kegg-pathway-abundances-from-the-predicted-ko-abundances
+
+#export qiime2 qza sequence and feature table into fasta (fna) and biome file to run with picrust2 on python environment
+#in this case used the min10 frequency present in >2 samples filtered in qiime2
+
+#qiime tools export --input-path rep_sequences_filteredforpicrust.qza  --output-path exports_for_picrust
+
+#qiime tools export --input-path feature_table_min2splsmin10freq.qza  --output-path exports_for_picrust
+
+
+module load miniconda3
+source activate picrust2
+picrust2_pipeline.py -s dna-sequences.fasta --stratified -i feature-table.biom -o picrust2_out_pipeline -p 10
+#Run 26march2020
+
+
+#unstratified 
+#to get the pathway abundances from the KO predictions use this, but be aware that mapping is from 2011 - see link above
+#pathway_pipeline.py -i rep_sequences_filteredtofeaturetable.qza -o picrust --no_regroup --map ~/miniconda3/envs/picrust2/lib/python3.6/site-packages/picrust2/default_files/pathway_mapfiles/KEGG_pathways_to_KO.tsv
+
+#or use the stratified KO file
+#to get the pathway abundances from the KO predictions use this, but be aware that mapping is from 2011 - see link above
+#pathway_pipeline.py -i KO_metagenome_out/pred_metagenome_contrib.tsv -o KEGG_pathways_out --no_regroup --map ~/miniconda3/envs/picrust2/lib/python3.6/site-packages/picrust2/default_files/pathway_mapfiles/KEGG_pathways_to_KO.tsv
+
+
+#add descriptions to ko_pathway file
+#add_descriptions.py -i KEGG_pathways_out/path_abun_unstrat.tsv -m KO -o KEGG_pathways_out/path_abun_unstrat_desc.tsv
+#ended up just using left_join in dplyr R
+
+
+#add descriptions to EC file
+#add_descriptions.py -i EC_metagenome_out/pred_metagenome_unstratEC.tsv -m EC -o EC_metagenome_out/pred_metagenome_unstratEC_desc.tsv
+
+#Wrapper for full PICRUSt2 pipeline. Run sequence placement with EPA-NG and GAPPA to place study sequences (i.e. OTUs and ASVs) into a reference tree. Then runs hidden-state prediction with the castor R package to predict genome for each study sequence. Metagenome profiles are then generated, which can be optionally stratified by the contributing sequence. Finally, pathway abundances are predicted based on metagenome profiles. By default, output files include predictions for Enzyme classification (EC) numbers, KEGG orthologs (KOs), and MetaCyc pathway abundances. However, this script enables users to use custom reference and trait tables to customize analyses
+
+
+
+
+
+
+conda deactivate
+
+
+echo "Finished at: $(date)"
+
+
+
+
+
+
+
+
+
+
+
