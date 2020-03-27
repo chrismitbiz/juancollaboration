@@ -328,7 +328,7 @@ go [back to top](#metadata)
 
 # Bacillus sp. plot
 ## Sodosol
-```{r bacillusblot2, echo=FALSE, fig.width=8, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusblot2, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Sodosol amended without (control) and with NPKS, poultry litter (PL), poultry litter/N and straw/NPKS. Significance to NPKS is shown (Wilcoxon test)." ,echo=FALSE, fig.width=8, fig.asp = 0.45, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
@@ -347,27 +347,27 @@ tax_table(physeqB.flt2)[, "Genus"] <- str_replace_all(tax_table(physeqB.flt2)[, 
 physeqB.flt2.mlt.count <- psmelt(physeqB.flt2)
 
 subs <- physeqB.flt2.mlt.count %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacilluscounts <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se" , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Total read counts" )  
+bacilluscounts <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", facet.by = "Genus", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Total read counts" ) +  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #relative
 physeqB.flt2.rel <- phyloseq::transform_sample_counts(physeqB.flt2, function(x) x / sum(x) )
 physeqB.flt2.mlt.rel <- psmelt(physeqB.flt2.rel)
 
 subs <- physeqB.flt2.mlt.rel %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se" , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") 
+bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", facet.by = "Genus", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") +  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # clr
 physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "clr")
 physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
 
 subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacillusclr <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se" , fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Abundances clr transformed") 
+bacillusclr <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", facet.by = "Genus", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Abundances clr transformed") +  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE, ncol = 3)
 ```
 
 ## Vertisol
-```{r bacillusblot3, echo=FALSE, fig.width=8, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusblot3, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Vertisol amended without (control) and with NPKS and poultry litter/N. Significance to NPKS is shown (Wilcoxon test).", echo=FALSE, fig.width=8, fig.asp = 0.45, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
@@ -386,21 +386,21 @@ tax_table(physeqB.flt2)[, "Genus"] <- str_replace_all(tax_table(physeqB.flt2)[, 
 physeqB.flt2.mlt.count <- psmelt(physeqB.flt2)
 
 subs <- physeqB.flt2.mlt.count %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacilluscounts <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se" , fill = "Treatments", xlab = "", scales = "free", ylab = "Total read counts", width = 0.5, position = position_dodge(0.7) )  + scale_fill_manual(values = c("tomato","khaki4","mediumseagreen") )
+bacilluscounts <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", xlab = "", facet.by = "Genus", scales = "free", ylab = "Total read counts", width = 0.5, position = position_dodge(0.7) )  + scale_fill_manual(values = c("tomato","khaki4","mediumseagreen") )+  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #relative
 physeqB.flt2.rel <- phyloseq::transform_sample_counts(physeqB.flt2, function(x) x / sum(x) )
 physeqB.flt2.mlt.rel <- psmelt(physeqB.flt2.rel)
 
 subs <- physeqB.flt2.mlt.rel %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", fill = "Treatments", xlab = "", scales = "free", ylab = "Relative abundances", width = 0.5, position = position_dodge(0.7))  + scale_fill_manual(values = c("tomato","khaki4","mediumseagreen") )
+bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", fill = "Treatments", xlab = "", facet.by = "Genus", scales = "free", ylab = "Relative abundances", width = 0.5, position = position_dodge(0.7))  + scale_fill_manual(values = c("tomato","khaki4","mediumseagreen") )+  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # clr
 physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "clr")
 physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
 
 subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacillusclr <- subs  %>% ggbarplot(data = ., x = "Genus", y = "Abundance", add = "mean_se", fill = "Treatments", xlab = "", scales = "free", ylab = "Abundances clr transformed", width = 0.5, position = position_dodge(0.7))  + scale_fill_manual(values = c("tomato","khaki4","mediumseagreen") )
+bacillusclr <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", fill = "Treatments", xlab = "", facet.by = "Genus", scales = "free", ylab = "Abundances clr transformed", width = 0.5, position = position_dodge(0.7))  + scale_fill_manual(values = c("tomato","khaki4","mediumseagreen") )+  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE, ncol = 3)
 ```
@@ -409,7 +409,7 @@ go [back to top](#metadata)
 
 # Genera different by treatment (to be continued)
 ## Sodosol
-```{r aldex1, eval=TRUE, echo=FALSE, fig.asp=0.8, fig.width=9, message=FALSE, warning=FALSE, cache=TRUE}
+```{r aldex1, eval=TRUE, echo=FALSE, fig.width=15, fig.asp = 1.7, message=FALSE, warning=FALSE, cache=TRUE}
 # Aldex
 
 #Sodosol NPK vs PL 
@@ -442,10 +442,10 @@ summary(sample_data(physeqB.flt2)$Treatment)
 #x.effect.list <- x.effect %>% rownames_to_column("Id")
 #aldex_significant_features <- x.tt %>% rownames_to_column("Id") %>%  left_join(x.effect.list) %>% inner_join(taxtable.flt2) %>% dplyr::select(Id, Phylum, Genus, wi.eBH, we.eBH, effect) %>% arrange(we.eBH) %>% filter(we.eBH <= 0.05)
 #write.csv(aldex_significant_features, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/aldex_significant_features.csv")
-aldex_significant_features <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/aldex_significant_features.csv") %>% filter(we.eBH <=0.02) %>% arrange(desc(effect))
+aldex_significant_features0 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/aldex_significant_features.csv")  %>% arrange(desc(effect))
 
-kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
-  kable_styling(latex_options="scale_down")
+#kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
+ # kable_styling(latex_options="scale_down")
 
 #check them out (aldex or ancome)
 #physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "compositional")
@@ -487,16 +487,12 @@ summary(sample_data(physeqB.flt2)$Treatment)
 #x.effect.list <- x.effect %>% rownames_to_column("Id")
 #aldex_significant_features  <- x.tt %>% rownames_to_column("Id") %>%  left_join(x.effect.list) %>% inner_join(taxtable.flt2) %>% dplyr::select(Id, Phylum, Genus, wi.eBH, we.eBH, effect) %>% arrange(we.eBH) %>% filter(we.eBH <= 0.05)
 #write.csv(aldex_significant_features, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/aldex_significant_features.csv")
-aldex_significant_features <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/aldex_significant_features.csv") %>% filter(we.eBH <=0.02) %>% arrange(desc(effect))
+aldex_significant_features1 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/aldex_significant_features.csv")  %>% arrange(desc(effect))
 
-kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
-  kable_styling(latex_options="scale_down")
+#kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
+#  kable_styling(latex_options="scale_down")
 
-#physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "compositional")
-#physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
 
-#subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% as.vector(aldex_significant_features$Genus) )
-#subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Phylum", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + ggtitle("Aldex (p corrected < 0.02)")
 
 
 
@@ -532,15 +528,35 @@ summary(sample_data(physeqB.flt2)$Treatment)
 #x.effect.list <- x.effect %>% rownames_to_column("Id")
 #aldex_significant_features  <- x.tt %>% rownames_to_column("Id") %>%  left_join(x.effect.list) %>% inner_join(taxtable.flt2) %>% dplyr::select(Id, Phylum, Genus, wi.eBH, we.eBH, effect) %>% arrange(we.eBH) %>% filter(we.eBH <= 0.05)
 #write.csv(aldex_significant_features, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/aldex_significant_features.csv")
-aldex_significant_features <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/aldex_significant_features.csv")
+aldex_significant_features2 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/aldex_significant_features.csv")
+#kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
+#  kable_styling(latex_options="scale_down")
 
-kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
-  kable_styling(latex_options="scale_down")
+## filter the genera whose abundances were significantly different in at least two of the treatments vs NPKS
+aldex_significant_features <- rbind(aldex_significant_features0, aldex_significant_features1, aldex_significant_features2)
+aldex_significant_features_presenttwice <- aldex_significant_features %>% 
+  group_by(Genus) %>% 
+  filter(n()>1)
+
+## plot the genera whose abundances were significantly different in at least two of the treatments vs NPKS
+physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c( "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
+physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
+physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
+#agglomerate to genus level
+physeqB.flt2 <- tax_glom(physeqB.flt2 , "Genus")
+physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "compositional")
+physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
+
+subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% as.vector(aldex_significant_features_presenttwice$Genus) )
+subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Phylum", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances", ncol = 3) + ggtitle("Genera different to NPKS in at least two other treatments (Aldex p < 0.05)") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
 
 ```
 
 
-```{r ancom, eval=TRUE, echo=FALSE, fig.width=9, fig.asp = 0.8, message=FALSE, warning=FALSE, cache=TRUE}
+```{r ancom, eval=FALSE, echo=FALSE, fig.width=9, fig.asp = 0.8, message=FALSE, warning=FALSE, cache=TRUE}
 
 #compare with ancom
 #export for qiime2 for ancom
