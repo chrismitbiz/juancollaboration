@@ -4,12 +4,13 @@ output:
   html_document:
     toc: true
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
   encoding=encoding,
   output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+  
   
 ---
 
@@ -51,7 +52,7 @@ options(kableExtra.auto_format = FALSE)
 ```
 
 
-# Metadata and phyloseq object bacteria {#metadata}
+# Metadata and phyloseq objects {#metadata}
 ```{r phyloseq, warning=FALSE, message=FALSE, echo=FALSE, cache = TRUE}
 #https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121?u=jbisanz
 metadata<-read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/metadata.tsv") #requires tidyverse
@@ -94,6 +95,21 @@ physeqB
 #head(tax_table(physeqB))
 kable(meta.df[c(1:5),c(1:12)], booktabs=TRUE) %>% 
   kable_styling(latex_options="scale_down")
+
+
+# now for the pathway file
+pathway.pred <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/path_abun_unstrat.tsv", col_names = TRUE)  %>% column_to_rownames("pathway")
+pw.names <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Milestone2_Field_Survey/M2_Bacteria/Picrust/metacyc_pathway_info_full.tsv") %>% column_to_rownames("Id")  %>% dplyr::select(-ALTERNATIVE) %>% dplyr::select(-`SUPER-PATHWAYS`)%>% dplyr::select(-NAMES) %>% dplyr::select(-CLASS2)
+
+physeq.pw <- phyloseq(otu_table(
+             pathway.pred, taxa_are_rows = T), 
+              tax_table(as.data.frame(pw.names) %>% as.matrix()),
+             sample_data(metadata2 %>% as.data.frame() %>% column_to_rownames("#SampleID"))) 
+taxtable <- data.frame(`COMMON.NAME` = (tax_table(physeq.pw)@.Data[,c("COMMON-NAME")]))
+taxa_names(physeq.pw) <- taxtable$COMMON.NAME
+
+
+
 ```
 
 # Data inspection and filtering {#inspec}
@@ -628,6 +644,139 @@ subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se"
 ```
 
 
+
+# Pathway potentials - differences by treatment
+```{r aldex_pathways, eval=TRUE, echo=FALSE, fig.width=15, fig.asp = 1.7, message=FALSE, warning=FALSE, cache=TRUE}
+# Aldex
+
+#Sodosol NPK vs PL 
+require(ALDEx2)
+physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Soiltypes == "Sodosol", physeq.pw)
+physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","PL"), physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
+physeqpw.flt = filter_taxa(physeqpw.flt , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
+taxtable.flt2 <- tax_table(physeqpw.flt)@.Data %>% as.data.frame() %>% rownames_to_column("Id")
+
+summary(sample_data(physeqpw.flt)$Treatment)
+
+otutable <- as.data.frame(phyloseq::otu_table(physeqpw.flt))
+otutable <- round(otutable)
+
+#cond <- sample_data(physeqpw.flt)$Treatment
+#x <- aldex.clr(otutable, cond, mc.samples=1000, denom="all", verbose=T)
+#x.effect <- aldex.effect(x, verbose=TRUE)
+#x.tt <- aldex.ttest(x, paired.test=FALSE, verbose=TRUE)
+#x.all <- data.frame(x.effect, x.tt)
+#saveRDS(x.all, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/x.all_PW")
+x.all <- readRDS("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/x.all_PW")
+#aldex.plot(x.all, type="MA", test="welch")
+#aldex.plot(x.all, type="MW", test="welch")
+#list the top features
+#x.effect.list <- x.effect %>% rownames_to_column("Id")
+#aldex_significant_features <- x.tt %>% rownames_to_column("Id") %>%  left_join(x.effect.list) %>% inner_join(taxtable.flt2) %>% dplyr::select(Id, wi.eBH, we.eBH, effect) %>% arrange(we.eBH) %>% filter(we.eBH <= 0.05)
+#write.csv(aldex_significant_features, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/aldex_significant_features_PW.csv")
+aldex_significant_features0 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKvsPL/aldex_significant_features_PW.csv")  %>% arrange(desc(effect)) %>% dplyr::select(-X)
+
+#kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
+ # kable_styling(latex_options="scale_down")
+
+#check them out (aldex or ancome)
+#physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "compositional")
+#physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
+#subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% as.vector(aldex_significant_features$Genus) )
+#subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", facet.by = c("Genus") , fill = "Phylum", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + ggtitle("Aldex (p corrected < 0.02)")
+
+
+
+#Sodosol NPK vs Straw+NPKS 
+require(ALDEx2)
+physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Soiltypes == "Sodosol", physeq.pw)
+physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","Straw+NPKS"), physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
+physeqpw.flt = filter_taxa(physeqpw.flt , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
+taxtable.flt2 <- tax_table(physeqpw.flt)@.Data %>% as.data.frame() %>% rownames_to_column("Id")
+
+summary(sample_data(physeqpw.flt)$Treatment)
+
+otutable <- as.data.frame(phyloseq::otu_table(physeqpw.flt))
+otutable <- round(otutable)
+
+#cond <- sample_data(physeqpw.flt)$Treatment
+#x <- aldex.clr(otutable, cond, mc.samples=1000, denom="all", verbose=T)
+#x.effect <- aldex.effect(x, verbose=TRUE)
+#x.tt <- aldex.ttest(x, paired.test=FALSE, verbose=TRUE)
+#x.all <- data.frame(x.effect, x.tt)
+#saveRDS(x.all, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/x.all_PW")
+x.all <- readRDS("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/x.all_PW")
+#aldex.plot(x.all, type="MA", test="welch")
+#aldex.plot(x.all, type="MW", test="welch")
+#list the top features
+#x.effect.list <- x.effect %>% rownames_to_column("Id")
+#aldex_significant_features  <- x.tt %>% rownames_to_column("Id") %>%  left_join(x.effect.list) %>% inner_join(taxtable.flt2) %>% dplyr::select(Id, wi.eBH, we.eBH, effect) %>% arrange(we.eBH) %>% filter(we.eBH <= 0.05)
+#write.csv(aldex_significant_features, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/aldex_significant_features_PW.csv")
+aldex_significant_features1 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsStrawNPKS/aldex_significant_features_PW.csv")  %>% arrange(desc(effect)) %>% dplyr::select(-X)
+
+#kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
+#  kable_styling(latex_options="scale_down")
+
+
+
+
+
+#Sodosol NPK vs PL/N
+require(ALDEx2)
+physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Soiltypes == "Sodosol", physeq.pw)
+physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","PL/N"), physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
+physeqpw.flt = filter_taxa(physeqpw.flt , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
+taxtable.flt2 <- tax_table(physeqpw.flt)@.Data %>% as.data.frame() %>% rownames_to_column("Id")
+
+summary(sample_data(physeqpw.flt)$Treatment)
+
+otutable <- as.data.frame(phyloseq::otu_table(physeqpw.flt))
+otutable <- round(otutable)
+
+#cond <- sample_data(physeqpw.flt)$Treatment
+#x <- aldex.clr(otutable, cond, mc.samples=1000, denom="all", verbose=T)
+#x.effect <- aldex.effect(x, verbose=TRUE)
+#x.tt <- aldex.ttest(x, paired.test=FALSE, verbose=TRUE)
+#x.all <- data.frame(x.effect, x.tt)
+#saveRDS(x.all, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/x.all_PW")
+x.all <- readRDS("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/x.all_PW")
+#aldex.plot(x.all, type="MA", test="welch")
+#aldex.plot(x.all, type="MW", test="welch")
+#list the top features
+#x.effect.list <- x.effect %>% rownames_to_column("Id")
+#aldex_significant_features  <- x.tt %>% rownames_to_column("Id") %>%  left_join(x.effect.list) %>% inner_join(taxtable.flt2) %>% dplyr::select(Id, wi.eBH, we.eBH, effect) %>% arrange(we.eBH) %>% filter(we.eBH <= 0.1)
+#write.csv(aldex_significant_features, "~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/aldex_significant_features_PW.csv")
+aldex_significant_features2 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/aldex_NPKSvsPL_N/aldex_significant_features_PW.csv") %>% dplyr::select(-X)
+#kable(aldex_significant_features %>% dplyr::select(-X, -Id), booktabs=TRUE) %>% 
+#  kable_styling(latex_options="scale_down")
+
+## filter the genera whose abundances were significantly different in at least two of the treatments vs NPKS
+aldex_significant_features <- rbind(aldex_significant_features0, aldex_significant_features1, aldex_significant_features2)
+aldex_significant_features_presenttwice <- aldex_significant_features %>% 
+  group_by(Id) %>% 
+  filter(n()>1) %>% filter(we.eBH <= 0.0002)
+
+## plot the genera whose abundances were significantly different in at least two of the treatments vs NPKS
+
+physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Treatments %in% c( "NPKS","PL/N", "PL","Straw+NPKS"), physeq.pw)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
+physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
+#agglomerate to genus level
+physeqpw.flt.clr <- microbiome::transform(physeqpw.flt, "compositional")
+physeqpw.flt.mlt.clr <- psmelt(physeqpw.flt.clr)
+
+subs <- physeqpw.flt.mlt.clr %>% dplyr::filter(OTU %in% as.vector(aldex_significant_features_presenttwice$Id) )
+subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", facet.by = c("OTU") , fill = "CLASS1", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances", ncol = 3) + ggtitle("Pathways different to NPKS in at least two other treatments (Aldex p < 0.05)") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
 
 
 
