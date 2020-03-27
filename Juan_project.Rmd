@@ -773,7 +773,7 @@ physeqpw.flt.clr <- microbiome::transform(physeqpw.flt, "compositional")
 physeqpw.flt.mlt.clr <- psmelt(physeqpw.flt.clr)
 
 subs <- physeqpw.flt.mlt.clr %>% dplyr::filter(OTU %in% as.vector(aldex_significant_features_presenttwice$Id) )
-subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", facet.by = c("OTU") , fill = "CLASS1", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances", ncol = 3) + ggtitle("Pathways different to NPKS in at least two other treatments (Aldex p < 0.05)") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se", facet.by = c("OTU") , fill = "CLASS1", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances", ncol = 3) + ggtitle("Pathways different to NPKS in at least two other treatments (Aldex p <= 0.0002)") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 
