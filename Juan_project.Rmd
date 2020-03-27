@@ -595,7 +595,7 @@ aldex_significant_features_presenttwice <- aldex_significant_features %>%
 
 ## plot the genera whose abundances were significantly different in at least two of the treatments vs NPKS
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c( "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("Control", "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 #agglomerate to genus level
@@ -630,7 +630,7 @@ ancom_significant <- ancom  %>%  inner_join(taxtable.flt2) %>% dplyr::select(Id,
 
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c( "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("Control", "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 #agglomerate to genus level
@@ -765,7 +765,7 @@ aldex_significant_features_presenttwice <- aldex_significant_features %>%
 
 ## plot the genera whose abundances were significantly different in at least two of the treatments vs NPKS
 
-physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Treatments %in% c( "NPKS","PL/N", "PL","Straw+NPKS"), physeq.pw)
+physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Treatments %in% c( "Control","NPKS","PL/N", "PL","Straw+NPKS"), physeq.pw)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
 #agglomerate to genus level
