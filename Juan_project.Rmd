@@ -646,6 +646,7 @@ subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se"
 
 
 # Pathway potentials - differences by treatment
+Go [here](https://metacyc.org/pwy-search.shtml) to search for metacyc pathways
 ```{r aldex_pathways, eval=TRUE, echo=FALSE, fig.width=15, fig.asp = 1.7, message=FALSE, warning=FALSE, cache=TRUE}
 # Aldex
 
