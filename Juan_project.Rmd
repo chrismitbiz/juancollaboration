@@ -342,13 +342,13 @@ go [back to top](#metadata)
 
 # *Bacillus sp.* plot
 ## Sodosol 
-### Kruskal test (holm adjusted) with LSD post-hoc test
+### Kruskal test (holm adjusted) with LSD post-hoc test (excl. outlier)
 ```{r bacillusblot2, fig.cap = "Total read counts, relative abundances and clr transformed abundances of the genus *Bacillus* in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent results of post hoc nonparametric tests (Kruskal-Wallis) at an alpha level of 0.05. Treatments with the same letter are not significantly different.", echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
 #barplot
 
-#physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
+physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 
-physeqB.flt2 <- prune_samples(sample_data(physeqB)$Soiltypes != "PLcomparison", physeqB)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes != "PLcomparison", physeqB.flt2)
 #physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "no plant no amendment", physeqB.flt2)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
 
@@ -405,7 +405,7 @@ groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
 groups1 <- groups1[match(levels$., groups1$Treatments),]
 label <- as.vector(groups1$groups)
 
-bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(0.45,0.45,0.45,0.45,0.45,0.45), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
+bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(0.38,0.38,0.38,0.38,0.38,0.38), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
 
 
 # clr
@@ -474,13 +474,13 @@ bacillusclr <- subs  %>% ggboxplot(data = ., x = "Treatments", y = "Abundance", 
 ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE, ncol = 3)
 ```
 
-### Anova with Duncan multiple comparison test
+### Anova with Duncan multiple comparison test (excl. outlier)
 ```{r bacillusblot3, fig.cap = "Total read counts, relative abundances and clr transformed abundances of the genus *Bacillus* in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent results of post hoc parametric tests (Duncan) at an alpha level of 0.05. Treatments with the same letter are not significantly different." , echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
 #barplot
 
-#physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
+physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 
-physeqB.flt2 <- prune_samples(sample_data(physeqB)$Soiltypes != "PLcomparison", physeqB)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes != "PLcomparison", physeqB.flt2)
 #physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "no plant no amendment", physeqB.flt2)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
 
@@ -537,7 +537,7 @@ groups1 <- comparison$groups %>% rownames_to_column("Treatments")
 groups1 <- groups1[match(levels$., groups1$Treatments),]
 label <- as.vector(groups1$groups)
 
-bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(0.45,0.45,0.45,0.45,0.45,0.45), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
+bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(0.38,0.38,0.38,0.38,0.38,0.38), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
 
 
 # clr
