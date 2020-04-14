@@ -343,7 +343,7 @@ go [back to top](#metadata)
 # *Bacillus sp.* plot
 ## Sodosol 
 ### Kruskal test (holm adjusted) with LSD post-hoc test
-```{r bacillusblot2, fig.cap = "Total read counts, relative abundances and clr transformed abundances of the genus *Bacillus* in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent significance of post hoc nonparametric tests (Kruskal-Wallis) at an alpha level of 0.05. Treatments with the same letter are not significantly different.", echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
+```{r bacillusblot2, fig.cap = "Total read counts, relative abundances and clr transformed abundances of the genus *Bacillus* in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent results of post hoc nonparametric tests (Kruskal-Wallis) at an alpha level of 0.05. Treatments with the same letter are not significantly different.", echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
 #barplot
 
 #physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
@@ -475,7 +475,7 @@ ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE,
 ```
 
 ### Anova with Duncan multiple comparison test
-```{r bacillusblot3, fig.cap = "Total read counts, relative abundances and clr transformed abundances of the genus *Bacillus* in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent significance of post hoc parametric tests (Duncan) at an alpha level of 0.05. Treatments with the same letter are not significantly different." , echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
+```{r bacillusblot3, fig.cap = "Total read counts, relative abundances and clr transformed abundances of the genus *Bacillus* in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent results of post hoc parametric tests (Duncan) at an alpha level of 0.05. Treatments with the same letter are not significantly different." , echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
 #barplot
 
 #physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
