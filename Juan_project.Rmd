@@ -4,14 +4,12 @@ output:
   html_document:
     toc: true
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
   encoding=encoding,
   output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
-  
-  
 ---
 
 ```{r packages, message=FALSE, warning=FALSE, echo=FALSE}
@@ -59,7 +57,7 @@ metadata<-read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancoll
 metadata2 <- metadata[c(2:67),]
 #defining factors
 metadata2$Soiltypes <- factor(metadata2$Soiltypes, levels=c("Sodosol", "Vertisol","PLcomparison"))
-metadata2$Treatments <- factor(metadata2$Treatments, levels=c("Control", "NPKS", "PL/N", "PL", "Straw+NPKS", "no plant no amendment","PLharvest","PLorig"))
+metadata2$Treatments <- factor(metadata2$Treatments, levels=c("no plant no amendment", "Control", "NPKS", "Straw+NPKS","PL", "PL/N",  "PLharvest","PLorig"))
 metadata2$AggregateSize <- factor(metadata2$AggregateSize, levels=c(">2 mm", "0.25-2 mm", "PL"))
 
 # create phyloseq object
@@ -342,14 +340,16 @@ save.image("workspace.RData")
 
 go [back to top](#metadata) 
 
-# Bacillus sp. plot
-## Sodosol
-```{r bacillusblot2, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Sodosol amended without (control) and with NPKS, poultry litter (PL), poultry litter/N and straw/NPKS. Significance to NPKS is shown (Wilcoxon test)." , echo=FALSE, fig.width=8, fig.asp = 0.45, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE, include=FALSE}
+# *Bacillus sp.* plot
+## Sodosol 
+### Kruskal test (holm adjusted) with LSD post-hoc test
+```{r bacillusblot2, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent significance of post hoc nonparametric tests (Kruskal-Wallis) at an alpha level of 0.05. Treatments with the same letter are not significantly different.", echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
 #barplot
 
-physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes != "PLcomparison", physeqB.flt2)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "no plant no amendment", physeqB.flt2)
+#physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
+
+physeqB.flt2 <- prune_samples(sample_data(physeqB)$Soiltypes != "PLcomparison", physeqB)
+#physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "no plant no amendment", physeqB.flt2)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
 
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
@@ -361,28 +361,81 @@ tax_table(physeqB.flt2)[, "Genus"] <- str_replace_all(tax_table(physeqB.flt2)[, 
 
 # total counts
 physeqB.flt2.mlt.count <- psmelt(physeqB.flt2)
-
 subs <- physeqB.flt2.mlt.count %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacilluscounts <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", facet.by = "Genus", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Total read counts" ) +  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#mutliple comparison tests 
+#anova test (use agricolae package), this would not be valid on non-normal, dependant data (ie. counts and relative abundance). 
+#https://cran.r-project.org/web/packages/agricolae/vignettes/tutorial.pdf
+require(agricolae)
+model <- aov(Abundance ~ Treatments, data = subs)
+#cv.model(model)
+#Model parameters: Degrees of freedom and variance of the error:
+#df <- df.residual(model)
+#MSerror <- deviance(model)/df
+#Alternatively the Kruskal test
+kr.test <- with(subs,kruskal(Abundance,Treatments,group=TRUE, p.adj="holm"))
+
+comparison <- duncan.test(model, "Treatments", console = FALSE)
+levels  <- levels(sample_data(physeqB.flt2)$Treatments) %>% as.data.frame()
+#groups1 <- comparison$groups %>% rownames_to_column("Treatments")
+groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
+groups1 <- groups1[match(levels$., groups1$Treatments),]
+label <- as.vector(groups1$groups)
+#barplot with labels
+bacilluscount <-  subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Total read counts")  + theme(axis.text.x = element_text(angle = 45, hjust = 1))  + annotate("text", x = groups1$Treatments, y=c(15500,15500,15500,15500,15500,15500), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
+
 
 #relative
 physeqB.flt2.rel <- phyloseq::transform_sample_counts(physeqB.flt2, function(x) x / sum(x) )
 physeqB.flt2.mlt.rel <- psmelt(physeqB.flt2.rel)
+#mutliple comparison tests 
+#anova test (use agricolae package), this would not be valid on non-normal, dependant data (ie. counts and relative abundance). 
+subs <- physeqB.flt2.mlt.rel %>% dplyr::filter(Genus %in% c("Bacillus"))
+model <- aov(Abundance ~ Treatments, data = subs)
+#cv.model(model)
+#Model parameters: Degrees of freedom and variance of the error:
+#df <- df.residual(model)
+#MSerror <- deviance(model)/df
+#Alternatively the Kruskal test
+kr.test <- with(subs,kruskal(Abundance,Treatments,group=TRUE, p.adj="holm"))
 
-subs <- physeqB.flt2.mlt.rel %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", facet.by = "Genus", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") +  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+comparison <- duncan.test(model, "Treatments", console = FALSE)
+levels  <- levels(sample_data(physeqB.flt2)$Treatments) %>% as.data.frame()
+#groups1 <- comparison$groups %>% rownames_to_column("Treatments")
+groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
+groups1 <- groups1[match(levels$., groups1$Treatments),]
+label <- as.vector(groups1$groups)
+
+bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(0.45,0.45,0.45,0.45,0.45,0.45), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
+
 
 # clr
+#mutliple comparison tests 
+#anova test (use agricolae package), this would not be valid on non-normal, dependant data (ie. counts and relative abundance). 
 physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "clr")
 physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
+subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% c("Bacillus"))
+model <- aov(Abundance ~ Treatments, data = subs)
+#cv.model(model)
+#Model parameters: Degrees of freedom and variance of the error:
+#df <- df.residual(model)
+#MSerror <- deviance(model)/df
+#Alternatively the Kruskal test
+kr.test <- with(subs,kruskal(Abundance,Treatments,group=TRUE, p.adj="holm"))
 
-subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% c("Bacillus")) 
-bacillusclr <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , fill = "Treatments", facet.by = "Genus", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Abundances clr transformed") +  stat_compare_means(method = "wilcox", ref.group = "NPKS",label = "p.signif")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+comparison <- duncan.test(model, "Treatments", console = FALSE)
+levels  <- levels(sample_data(physeqB.flt2)$Treatments) %>% as.data.frame()
+#groups1 <- comparison$groups %>% rownames_to_column("Treatments")
+groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
+groups1 <- groups1[match(levels$., groups1$Treatments),]
+label <- as.vector(groups1$groups)
+ 
+bacillusclr <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Abundances clr transformed") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(10,10,10,10,10,10), label = label)+ scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
 
-ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE, ncol = 3)
+ggarrange(bacilluscount, bacillusrelative , bacillusclr , legend = "none", ncol = 3)
+
 ```
 
-```{r bacillusBOX, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Sodosol amended without (control) and with NPKS, poultry litter (PL), poultry litter/N and straw/NPKS. Significance to NPKS is shown (Wilcoxon test)." ,echo=FALSE, fig.width=8, fig.asp = 0.45, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusBOX, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Sodosol amended without (control) and with NPKS, poultry litter (PL), poultry litter/N and straw/NPKS. Significance to NPKS is shown (Wilcoxon test)." ,echo=FALSE, fig.width=8, fig.asp = 0.45, eval = FALSE, include = FALSE, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 
 #physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
@@ -421,8 +474,102 @@ bacillusclr <- subs  %>% ggboxplot(data = ., x = "Treatments", y = "Abundance", 
 ggarrange(bacilluscounts, bacillusrelative , bacillusclr , common.legend = TRUE, ncol = 3)
 ```
 
+### Anova with Duncan multiple comparison test
+```{r bacillusblot3, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Sodosol without plants and no amendments (control-P-A), with plants but no amendments (control-A), amended with NPKS, NPKS+straw (NPKS/straw), poultry litter (PL), poultry litter + N (PL/N). Letters represent significance of post hoc parametric tests (Duncan) at an alpha level of 0.05. Treatments with the same letter are not significantly different." , echo=FALSE, fig.width=11, fig.asp = 0.35, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE, include=TRUE}
+#barplot
+
+#physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
+
+physeqB.flt2 <- prune_samples(sample_data(physeqB)$Soiltypes != "PLcomparison", physeqB)
+#physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "no plant no amendment", physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
+
+physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
+physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
+physeqB.flt2 <- tax_glom(physeqB.flt2 , "Genus")
+#physeqB.flt2 = filter_taxa(physeqB.flt2 , function(x) sum(x > 0) > (0.03*length(x)), TRUE) 
+
+tax_table(physeqB.flt2)[, "Genus"] <- str_replace_all(tax_table(physeqB.flt2)[, "Genus"], "D_5__", "")
+
+# total counts
+physeqB.flt2.mlt.count <- psmelt(physeqB.flt2)
+subs <- physeqB.flt2.mlt.count %>% dplyr::filter(Genus %in% c("Bacillus")) 
+#mutliple comparison tests 
+#anova test (use agricolae package), this would not be valid on non-normal, dependant data (ie. counts and relative abundance). 
+#https://cran.r-project.org/web/packages/agricolae/vignettes/tutorial.pdf
+require(agricolae)
+model <- aov(Abundance ~ Treatments, data = subs)
+#cv.model(model)
+#Model parameters: Degrees of freedom and variance of the error:
+#df <- df.residual(model)
+#MSerror <- deviance(model)/df
+#Alternatively the Kruskal test
+kr.test <- with(subs,kruskal(Abundance,Treatments,group=TRUE, p.adj="holm"))
+
+comparison <- duncan.test(model, "Treatments", console = FALSE)
+levels  <- levels(sample_data(physeqB.flt2)$Treatments) %>% as.data.frame()
+groups1 <- comparison$groups %>% rownames_to_column("Treatments")
+#groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
+groups1 <- groups1[match(levels$., groups1$Treatments),]
+label <- as.vector(groups1$groups)
+#barplot with labels
+bacilluscount <-  subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" , color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Total read counts")  + theme(axis.text.x = element_text(angle = 45, hjust = 1))  + annotate("text", x = groups1$Treatments, y=c(15500,15500,15500,15500,15500,15500), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
+
+
+#relative
+physeqB.flt2.rel <- phyloseq::transform_sample_counts(physeqB.flt2, function(x) x / sum(x) )
+physeqB.flt2.mlt.rel <- psmelt(physeqB.flt2.rel)
+#mutliple comparison tests 
+#anova test (use agricolae package), this would not be valid on non-normal, dependant data (ie. counts and relative abundance). 
+subs <- physeqB.flt2.mlt.rel %>% dplyr::filter(Genus %in% c("Bacillus"))
+model <- aov(Abundance ~ Treatments, data = subs)
+#cv.model(model)
+#Model parameters: Degrees of freedom and variance of the error:
+#df <- df.residual(model)
+#MSerror <- deviance(model)/df
+#Alternatively the Kruskal test
+kr.test <- with(subs,kruskal(Abundance,Treatments,group=TRUE, p.adj="holm"))
+
+comparison <- duncan.test(model, "Treatments", console = FALSE)
+levels  <- levels(sample_data(physeqB.flt2)$Treatments) %>% as.data.frame()
+groups1 <- comparison$groups %>% rownames_to_column("Treatments")
+#groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
+groups1 <- groups1[match(levels$., groups1$Treatments),]
+label <- as.vector(groups1$groups)
+
+bacillusrelative <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Relative abundances") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(0.45,0.45,0.45,0.45,0.45,0.45), label = label) + scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen"))+ theme(legend.position = "none")
+
+
+# clr
+#mutliple comparison tests 
+#anova test (use agricolae package), this would not be valid on non-normal, dependant data (ie. counts and relative abundance). 
+physeqB.flt2.clr <- microbiome::transform(physeqB.flt2, "clr")
+physeqB.flt2.mlt.clr <- psmelt(physeqB.flt2.clr)
+subs <- physeqB.flt2.mlt.clr %>% dplyr::filter(Genus %in% c("Bacillus"))
+model <- aov(Abundance ~ Treatments, data = subs)
+#cv.model(model)
+#Model parameters: Degrees of freedom and variance of the error:
+#df <- df.residual(model)
+#MSerror <- deviance(model)/df
+#Alternatively the Kruskal test
+kr.test <- with(subs,kruskal(Abundance,Treatments,group=TRUE, p.adj="holm"))
+
+comparison <- duncan.test(model, "Treatments", console = FALSE)
+levels  <- levels(sample_data(physeqB.flt2)$Treatments) %>% as.data.frame()
+groups1 <- comparison$groups %>% rownames_to_column("Treatments")
+#groups1 <- kr.test$groups %>% rownames_to_column("Treatments")
+groups1 <- groups1[match(levels$., groups1$Treatments),]
+label <- as.vector(groups1$groups)
+ 
+bacillusclr <- subs  %>% ggbarplot(data = ., x = "Treatments", y = "Abundance", add = "mean_se" ,color = "grey20", fill = "Treatments", width = 0.5, xlab = "", position = position_dodge(0.7), scales = "free", ylab = "Abundances clr transformed") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + annotate("text", x = groups1$Treatments, y=c(10,10,10,10,10,10), label = label)+ scale_x_discrete(labels = c('Control-P-A','Control-A','NPKS','NPKS/straw','PL','PL/N')) + scale_fill_manual(values = c("white", "black", "red3", "darkorange1", "springgreen3", "darkolivegreen")) + theme(legend.position = "none")
+
+ggarrange(bacilluscount, bacillusrelative , bacillusclr , legend = "none", ncol = 3)
+
+```
+
+
 ## Vertisol
-```{r bacillusblot3, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Vertisol amended without (control) and with NPKS and poultry litter/N. Significance to NPKS is shown (Wilcoxon test).", echo=FALSE, fig.width=8, fig.asp = 0.45, message=FALSE, warning=FALSE, cache=TRUE}
+```{r bacillusblot4, fig.cap = "Total read counts, relative abundances and clr transformed abundances of bacillus in Vertisol amended without (control) and with NPKS and poultry litter/N. Significance to NPKS is shown (Wilcoxon test).", echo=FALSE, fig.width=8, fig.asp = 0.45, message=FALSE, warning=FALSE, cache=TRUE}
 #barplot
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
