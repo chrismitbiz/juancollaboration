@@ -113,7 +113,7 @@ taxa_names(physeq.pw) <- taxtable$COMMON.NAME
 ```
 
 # Data inspection and filtering {#inspec}
-```{r inspec, warning=FALSE, message=FALSE, echo=FALSE, cache = FALSE}
+```{r inspec, warning=FALSE, message=FALSE, echo=FALSE, cache = TRUE}
 # all features
 otus.table <- as.data.frame(otu_table(physeqB))
 otus.table <- otus.table %>% rownames_to_column(var = "#SampleID") %>% arrange(desc(rowSums(otus.table))) %>% column_to_rownames(var = "#SampleID")
@@ -301,7 +301,7 @@ go [back to top](#metadata)
 # Beta diversity 
 
 ## NMDS Bray
-### Sodosol (n = 36) and Vertisol (n = 36)
+### Sodosol (n = 36) and Vertisol (n = 6 per treatment)
 ```{r nmdsSod, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
 
 # fixed width of x axis
@@ -348,7 +348,7 @@ ggpubr::ggarrange(nmds1, nmds2, ncol = 1, labels = "auto")
 
 go [back to top](#metadata) 
 
-### Sodosol (n = 18) and Vertisol (n = 18), Aggregate size >2 mm only
+#### Aggregate size >2 mm only (n = 3 per treatment)
 ```{r nmdsSod2mm, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
 
 # fixed width of x axis
@@ -397,7 +397,7 @@ ggpubr::ggarrange(nmds1, nmds2, ncol = 1, labels = "auto")
 
 go [back to top](#metadata) 
 
-### Sodosol (n = 18) and Vertisol (n = 18), Aggregate size 0.25-2 mm only
+#### Aggregate size 0.25-2 mm only (n = 3 per treatment)
 ```{r nmdsSod025mm, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
 
 # fixed width of x axis
@@ -409,7 +409,7 @@ yaxis = c(-0.65, 0.65)
 physeqBSoil1 <- prune_samples(sample_data(physeqB.flt)$Soiltype == "Sodosol", physeqB.flt)
 physeqBSoil1 <- prune_samples(sample_data(physeqBSoil1)$AggregateSize == "0.25-2 mm", physeqBSoil1)
 physeqBSoil1 = prune_taxa(taxa_sums(physeqBSoil1) >= 10, physeqBSoil1) #minimum reads per feature
-#ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
 #ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
 #df <- otu_table(physeqBSoil1)@.Data # to check the otutable
 
@@ -448,6 +448,7 @@ ggpubr::ggarrange(nmds1, nmds2, ncol = 1, labels = "auto")
 
 go [back to top](#metadata) 
 
+<br/>
 
 # *Bacillus sp.* plot
 ## Sodosol 
@@ -683,7 +684,7 @@ ggarrange(bacilluscount, bacillusrelative , bacillusclr , legend = "none", ncol 
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes != "PLcomparison", physeqB.flt2)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "no plant no amendment", physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments != "No plant No amendment", physeqB.flt2)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Vertisol", physeqB.flt2)
 
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
@@ -727,7 +728,7 @@ go [back to top](#metadata)
 require(ALDEx2)
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("NPKS","PL"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("NPKS","Poultry litter"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 physeqB.flt2 = filter_taxa(physeqB.flt2 , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
@@ -770,7 +771,7 @@ aldex_significant_features0 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/
 require(ALDEx2)
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("NPKS","Straw+NPKS"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("NPKS","NPKS/straw"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 #agglomerate to genus level
@@ -811,7 +812,7 @@ aldex_significant_features1 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/
 require(ALDEx2)
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
 physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Soiltypes == "Sodosol", physeqB.flt2)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("NPKS","PL/N"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("NPKS","Poultry litter/N"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 #agglomerate to genus level
@@ -851,7 +852,7 @@ aldex_significant_features_presenttwice <- aldex_significant_features %>%
 
 ## plot the genera whose abundances were significantly different in at least two of the treatments vs NPKS
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("Control", "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("Control", "NPKS","Poultry litter/N", "Poultry litter","NPKS/straw"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 #agglomerate to genus level
@@ -886,7 +887,7 @@ ancom_significant <- ancom  %>%  inner_join(taxtable.flt2) %>% dplyr::select(Id,
 
 
 physeqB.flt2 <- prune_samples(sample_names(physeqB) != "Juan07", physeqB)
-physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("Control", "NPKS","PL/N", "PL","Straw+NPKS"), physeqB.flt2)
+physeqB.flt2 <- prune_samples(sample_data(physeqB.flt2)$Treatments %in% c("Control", "NPKS","Poultry litter/N", "Poultry litter","NPKS/straw"), physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) != 0, physeqB.flt2)
 physeqB.flt2 = prune_taxa(taxa_sums(physeqB.flt2) >= 10, physeqB.flt2) #minimum reads per feature
 #agglomerate to genus level
@@ -909,7 +910,7 @@ Go [here](https://metacyc.org/pwy-search.shtml) to search for metacyc pathways
 #Sodosol NPK vs PL 
 require(ALDEx2)
 physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Soiltypes == "Sodosol", physeq.pw)
-physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","PL"), physeqpw.flt)
+physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","Poultry litter"), physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
 physeqpw.flt = filter_taxa(physeqpw.flt , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
@@ -949,7 +950,7 @@ aldex_significant_features0 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/
 #Sodosol NPK vs Straw+NPKS 
 require(ALDEx2)
 physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Soiltypes == "Sodosol", physeq.pw)
-physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","Straw+NPKS"), physeqpw.flt)
+physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","NPKS/straw"), physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
 physeqpw.flt = filter_taxa(physeqpw.flt , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
@@ -985,7 +986,7 @@ aldex_significant_features1 <- read.csv("~/Documents/Study/LaTrobe/Research/phD/
 #Sodosol NPK vs PL/N
 require(ALDEx2)
 physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Soiltypes == "Sodosol", physeq.pw)
-physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","PL/N"), physeqpw.flt)
+physeqpw.flt <- prune_samples(sample_data(physeqpw.flt)$Treatments %in% c("NPKS","Poultry litter/N"), physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
 physeqpw.flt = filter_taxa(physeqpw.flt , function(x) sum(x > 0) > (0.17*length(x)), TRUE) 
@@ -1021,7 +1022,7 @@ aldex_significant_features_presenttwice <- aldex_significant_features %>%
 
 ## plot the genera whose abundances were significantly different in at least two of the treatments vs NPKS
 
-physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Treatments %in% c( "Control","NPKS","PL/N", "PL","Straw+NPKS"), physeq.pw)
+physeqpw.flt <- prune_samples(sample_data(physeq.pw)$Treatments %in% c( "Control","NPKS","Poultry litter/N", "Poultry litter","NPKS/straw"), physeq.pw)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) != 0, physeqpw.flt)
 physeqpw.flt = prune_taxa(taxa_sums(physeqpw.flt) >= 10, physeqpw.flt) #minimum reads per feature
 #agglomerate to genus level
