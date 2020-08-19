@@ -301,7 +301,7 @@ go [back to top](#metadata)
 # Beta diversity 
 
 ## NMDS Bray
-### Sodosol (n = 36) and Vertisol (n = 6 per treatment)
+### Sodosol and Vertisol (n = 6 per treatment)
 Data was filtered to ASVs with a minimum of 10 reads and then rarefied to an even depth before analysis
 ```{r nmdsSod, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
 
