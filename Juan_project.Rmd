@@ -302,6 +302,7 @@ go [back to top](#metadata)
 
 ## NMDS Bray
 ### Sodosol (n = 36) and Vertisol (n = 6 per treatment)
+Data was filtered to ASVs with a minimum of 10 reads and then rarefied to an even depth before analysis
 ```{r nmdsSod, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
 
 # fixed width of x axis
@@ -317,7 +318,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
 
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 
@@ -338,7 +339,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
 
@@ -365,7 +366,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
 
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 
@@ -387,7 +388,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
 
@@ -417,7 +418,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
 
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
@@ -438,7 +439,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
 
