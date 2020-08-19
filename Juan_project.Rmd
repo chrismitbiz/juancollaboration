@@ -10,6 +10,7 @@ knit: (function(input_file, encoding) {
   rmarkdown::render(input_file,
   encoding=encoding,
   output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+  
 ---
 
 ```{r packages, message=FALSE, warning=FALSE, echo=FALSE}
@@ -51,13 +52,13 @@ options(kableExtra.auto_format = FALSE)
 
 
 # Metadata and phyloseq objects {#metadata}
-```{r phyloseq, warning=FALSE, message=FALSE, echo=FALSE, cache = TRUE}
+```{r phyloseq, warning=FALSE, message=FALSE, echo=FALSE, cache = FALSE}
 #https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121?u=jbisanz
 metadata<-read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/metadata.tsv") #requires tidyverse
 metadata2 <- metadata[c(2:67),]
 #defining factors
 metadata2$Soiltypes <- factor(metadata2$Soiltypes, levels=c("Sodosol", "Vertisol","PLcomparison"))
-metadata2$Treatments <- factor(metadata2$Treatments, levels=c("no plant no amendment", "Control", "NPKS", "Straw+NPKS","PL", "PL/N",  "PLharvest","PLorig"))
+metadata2$Treatments <- factor(metadata2$Treatments, levels=c("Control", "NPKS", "PL/N", "PL", "Straw+NPKS",  "no plant no amendment", "PLharvest","PLorig"), labels = c("Control","NPKS", "Poultry litter/N", "Poultry litter", "NPKS/straw","No plant No amendment","PLharvest","PLorig"))
 metadata2$AggregateSize <- factor(metadata2$AggregateSize, levels=c(">2 mm", "0.25-2 mm", "PL"))
 
 # create phyloseq object
@@ -65,6 +66,7 @@ SVs      <-   qiime2R::read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_pro
 #SVs      <-   qiime2R::read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data_200317/feature_table_min2splsmin10freq.qza")
 taxonomy <- read_tsv("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data_200317/taxonomy_silva.tsv") %>% filter(Taxon != "categorical")  %>% rename(Feature.ID = `Feature ID`)
 taxtable <- taxonomy %>% as_tibble() %>% separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species")) 
+# did not do the tree yet for the new set filtered on 17March20
 #tree <- read_qza("~/Documents/Study/LaTrobe/Research/phD/Juan_project/juancollaboration/qiime2_data/insertion-tree.qza")
 
 physeqB <- phyloseq(
@@ -111,7 +113,7 @@ taxa_names(physeq.pw) <- taxtable$COMMON.NAME
 ```
 
 # Data inspection and filtering {#inspec}
-```{r inspec, warning=FALSE, message=FALSE, echo=FALSE, cache = TRUE}
+```{r inspec, warning=FALSE, message=FALSE, echo=FALSE, cache = FALSE}
 # all features
 otus.table <- as.data.frame(otu_table(physeqB))
 otus.table <- otus.table %>% rownames_to_column(var = "#SampleID") %>% arrange(desc(rowSums(otus.table))) %>% column_to_rownames(var = "#SampleID")
@@ -148,7 +150,7 @@ summary(taxa_sums(physeqB.flt))
 print(paste("The number of reads and ASVs left after filtering is",round(sum(taxa_sums(physeqB.flt)) / sum(taxa_sums(physeqB))*100,2),"% and",round(ntaxa(physeqB.flt) / ntaxa(physeqB) *100,2),"%, a change from",round(sum(taxa_sums(physeqB))),"to",round(sum(taxa_sums(physeqB.flt))), "reads and", ntaxa(physeqB),"to",ntaxa(physeqB.flt),"ASVs. The median changed from", median(rowSums(otu_table(physeqB))),"to",median(rowSums(otu_table(physeqB.flt))),"reads per ASV."))
 
 otutable <- otu_table(physeqB.flt) %>% as.data.frame() %>% rownames_to_column("Feature.ID") %>% left_join(taxonomy) %>% dplyr::select( - Confidence, -Feature.ID) %>% dplyr::select(Taxon, everything())
-write.csv(t(otutable), "otu.table_Juan.csv", row.names = TRUE)
+#write.csv(t(otutable), "otu.table_Juan.csv", row.names = TRUE)
 ```
 go [back to top](#metadata) 
 
@@ -299,46 +301,153 @@ go [back to top](#metadata)
 # Beta diversity 
 
 ## NMDS Bray
-### Sodosol
-```{r nmdsSod, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = TRUE}
+### Sodosol (n = 36) and Vertisol (n = 36)
+```{r nmdsSod, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
+
+# fixed width of x axis
+xaxis = c(-1, 1)
+yaxis = c(-0.65, 0.65)
+
 
 #Soil1 data
 physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Sodosol", physeqB.flt)
 
 ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
-ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+#ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+label <- round(ord_nmds$stress,3)
 
-nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments") + geom_point(aes(size = InvSimpson)) + ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
-nmds1  <- nmds1  +  geom_text_repel(label = nmds1$data$ColumnNo)
-#nmds1 <- nmds1 + stat_ellipse(aes(group = days), type = "t", linetype = 2)
-#nmds1 <- nmds1 + geom_polygon(aes(alpha = 0.6, fill = Rhizosphere,group = TreatmentID), stat = "identity") + guides(alpha = F)
-nmds1 
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
+
+#+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 
 ```
   
-go [back to top](#metadata) 
+```{r nmdsVert, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
 
-### Vertisol
-```{r nmdsVert, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = TRUE}
+# fixed width of x axis
+xaxis = c(-1, 1)
+yaxis = c(-0.65, 0.65)
+
 
 #Soil1 data
 physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Vertisol", physeqB.flt)
 
 ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
-ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+#ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+label <- round(ord_nmds$stress,3)
 
-nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments") + geom_point(aes(size = InvSimpson)) + ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
-nmds1  <- nmds1  +  geom_text_repel(label = nmds1$data$ColumnNo)
-#nmds1 <- nmds1 + stat_ellipse(aes(group = days), type = "t", linetype = 2)
-#nmds1 <- nmds1 + geom_polygon(aes(alpha = 0.6, fill = Rhizosphere,group = TreatmentID), stat = "identity") + guides(alpha = F)
-nmds1 
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
+#+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+```
 
-save.image("workspace.RData")
+```{r nmdsplot, fig.width= 6, fig.asp=1.15, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE,  fig.cap = "Beta diversity comparisons by non-metric multidimensional scaling (NMDS) among different amendment treatments in the Sodosol (a) and Vertosol (b) subsoils."}
+ggpubr::ggarrange(nmds1, nmds2, ncol = 1, labels = "auto") 
 ```
 
 go [back to top](#metadata) 
+
+### Sodosol (n = 18) and Vertisol (n = 18), Aggregate size >2 mm only
+```{r nmdsSod2mm, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
+
+# fixed width of x axis
+xaxis = c(-1, 1)
+yaxis = c(-0.65, 0.65)
+
+
+#Soil1 data
+physeqBSoil1 <- prune_samples(sample_data(physeqB.flt)$Soiltype == "Sodosol", physeqB.flt)
+physeqBSoil1 <- prune_samples(sample_data(physeqBSoil1)$AggregateSize == ">2 mm", physeqBSoil1)
+
+ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+# ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+label <- round(ord_nmds$stress,3)
+
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
+
+#+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+
+```
+  
+```{r nmdsVert2mm, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
+
+# fixed width of x axis
+xaxis = c(-1, 1)
+yaxis = c(-0.65, 0.65)
+
+
+#Soil1 data
+physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Vertisol", physeqB.flt)
+physeqBSoil1 <-  prune_samples(sample_data(physeqBSoil1)$AggregateSize == ">2 mm", physeqBSoil1)
+
+ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+#ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+label <- round(ord_nmds$stress,3)
+
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
+#+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+```
+
+```{r nmdsplot2mm, fig.width= 6, fig.asp=1.15, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE,  fig.cap = "Beta diversity comparisons by non-metric multidimensional scaling (NMDS) among different amendment treatments in the Sodosol (a) and Vertosol (b) subsoils."}
+ggpubr::ggarrange(nmds1, nmds2, ncol = 1, labels = "auto") 
+```
+
+go [back to top](#metadata) 
+
+### Sodosol (n = 18) and Vertisol (n = 18), Aggregate size 0.25-2 mm only
+```{r nmdsSod025mm, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
+
+# fixed width of x axis
+xaxis = c(-1, 1)
+yaxis = c(-0.65, 0.65)
+
+
+#Soil1 data
+physeqBSoil1 <- prune_samples(sample_data(physeqB.flt)$Soiltype == "Sodosol", physeqB.flt)
+physeqBSoil1 <- prune_samples(sample_data(physeqBSoil1)$AggregateSize == "0.25-2 mm", physeqBSoil1)
+physeqBSoil1 = prune_taxa(taxa_sums(physeqBSoil1) >= 10, physeqBSoil1) #minimum reads per feature
+#ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+#ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+#df <- otu_table(physeqBSoil1)@.Data # to check the otutable
+
+
+ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+label <- round(ord_nmds$stress,3)
+
+nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Sodosol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) 
+
+#+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+```
+  
+```{r nmdsVert025mm, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE}
+
+# fixed width of x axis
+xaxis = c(-1, 1)
+yaxis = c(-0.65, 0.65)
+
+
+#Soil1 data
+physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Vertisol", physeqB.flt)
+physeqBSoil1 <-  prune_samples(sample_data(physeqBSoil1)$AggregateSize == "0.25-2 mm", physeqBSoil1)
+
+ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(physeqBSoil1))),  rngseed = TRUE, replace = TRUE, trimOTUs = TRUE)
+#ps.perm <- phyloseq::transform_sample_counts(ps.perm, function(x) x / sum(x) )
+ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
+label <- round(ord_nmds$stress,3)
+
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, Stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)
+#+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
+```
+
+```{r nmdsplot025mm, fig.width= 6, fig.asp=1.15, message=FALSE, warning=FALSE, echo=FALSE, results=FALSE, cache = FALSE,  fig.cap = "Beta diversity comparisons by non-metric multidimensional scaling (NMDS) among different amendment treatments in the Sodosol (a) and Vertosol (b) subsoils."}
+ggpubr::ggarrange(nmds1, nmds2, ncol = 1, labels = "auto") 
+```
+
+go [back to top](#metadata) 
+
 
 # *Bacillus sp.* plot
 ## Sodosol 

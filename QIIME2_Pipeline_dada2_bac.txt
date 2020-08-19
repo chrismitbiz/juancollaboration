@@ -52,6 +52,7 @@ source activate qiime2-2020.2
 #17March: 21,407 features, 4,254,078 filtered reads (74%) from original 3,009,658 demultiplexed reads)
 
 
+
 ###----------------------------------TAXONOMIC ANALYSIS  (step 3) ----------------------------
 
 ### Silva
