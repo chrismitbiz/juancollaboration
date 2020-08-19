@@ -329,7 +329,7 @@ nmds1 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", sha
 # fixed width of x axis
 xaxis = c(-1, 1)
 yaxis = c(-0.65, 0.65)
-
+colorsvertisol <- c("tomato", "burlywood3", "forestgreen","hotpink")
 
 #Soil1 data
 physeqBSoil1 <-  prune_samples(sample_data(physeqB.flt)$Soiltype == "Vertisol", physeqB.flt)
@@ -339,7 +339,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)+ scale_shape_manual(values=c(16, 17, 15,8)) + scale_colour_manual(values=c("tomato", "burlywood3", "forestgreen","hotpink"))
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)+ scale_shape_manual(values=c(16, 17, 15,8)) + scale_colour_manual(values=c(colorsvertisol))
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
 
@@ -388,7 +388,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) + scale_shape_manual(values=c(16, 17, 15,8)) + scale_colour_manual(values=c("tomato", "burlywood3", "forestgreen","hotpink"))
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4) + scale_shape_manual(values=c(16, 17, 15,8)) + scale_colour_manual(values=c(colorsvertisol))
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
 
@@ -439,7 +439,7 @@ ps.perm <- rarefy_even_depth(physeqBSoil1, sample.size = min(colSums(otu_table(p
 ord_nmds <- phyloseq::ordinate(ps.perm, "NMDS", "bray")
 label <- round(ord_nmds$stress,3)
 
-nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)+ scale_shape_manual(values=c(16, 17, 15,8)) + scale_colour_manual(values=c("tomato", "burlywood3", "forestgreen","hotpink"))
+nmds2 <- phyloseq::plot_ordination(ps.perm, ord_nmds , color = "Treatments", shape = "Treatments")  + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() ) + xlim(xaxis) + ylim(yaxis) + geom_hline(yintercept=0, linetype="dashed", color = "gray") + geom_vline(xintercept=0, linetype="dashed", color = "gray") + annotate(geom = 'text', label = paste("Bray-Curtis, stress = ", label), x = -Inf, y = -Inf, hjust = -0.05, vjust = -1, size = 3) + annotate(geom = 'text', label = paste("Vertisol"), x = -Inf, y = 0.6, hjust = -0.2, vjust = 0, size = 4)+ scale_shape_manual(values=c(16, 17, 15,8)) + scale_colour_manual(values=c(colorsvertisol))
 #+ ggtitle("nMDS, bray") + labs(subtitle ="filtered and rarefied OTU table")
 ```
 
