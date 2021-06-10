@@ -1,4 +1,1 @@
-# juancollaboration
-Collaboration with Juan's project. 
-  
-For overview of graphs go to https://chrismitbiz.github.io/juancollaboration/
+# An insight into the effect of organic amendments on the transpiration efficiency of wheat plant in a sodic duplex soil.
